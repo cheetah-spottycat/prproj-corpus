@@ -30,6 +30,23 @@ function log(line) {
   el.scrollTop = el.scrollHeight;
 }
 
+// Status box: state is "idle", "running", "done-ok" or "done-fail".
+function setStatus(state, title, detail, fraction) {
+  const box = document.getElementById("status");
+  box.className = state === "idle" ? "" : state;
+  document.getElementById("status-title").textContent = title;
+  document.getElementById("status-detail").textContent = detail || "";
+  const pct = Math.max(0, Math.min(1, fraction || 0)) * 100;
+  document.getElementById("bar-fill").style.width = `${pct.toFixed(1)}%`;
+}
+
+function elapsed(since) {
+  const s = Math.round((Date.now() - since) / 1000);
+  return s >= 60 ? `${Math.floor(s / 60)} min ${s % 60} s` : `${s} s`;
+}
+
+let running = false;
+
 document.getElementById("choose").addEventListener("click", async () => {
   const folder = await fs.getFolder();
   if (folder) {
@@ -43,12 +60,30 @@ document.getElementById("run").addEventListener("click", async () => {
     log("Choose the corpus folder first (the folder that holds tools/ and media/).");
     return;
   }
+  if (running) return;
+  running = true;
+  const runButton = document.getElementById("run");
+  runButton.setAttribute("disabled", "");
   const pattern = document.getElementById("filter").value || "";
   logLines.length = 0;
+  document.getElementById("log").textContent = "";
+  const started = Date.now();
+  setStatus("running", "Starting…", "Reading cases", 0);
   try {
-    await runAll(pattern);
+    const { ok, total, failed } = await runAll(pattern, started);
+    if (total === 0) {
+      setStatus("done-fail", "Nothing to run", "No case id matches the filter.", 0);
+    } else if (failed.length === 0) {
+      setStatus("done-ok", `Finished: ${ok}/${total} ok`, `Took ${elapsed(started)}. Output in out/premiere/.`, 1);
+    } else {
+      setStatus("done-fail", `Finished: ${failed.length} of ${total} failed`, `Failed: ${failed.join(", ")} (${elapsed(started)})`, 1);
+    }
   } catch (e) {
     log(`fatal: ${e && e.stack ? e.stack : e}`);
+    setStatus("done-fail", "Stopped by an error", String(e && e.message ? e.message : e), 1);
+  } finally {
+    running = false;
+    runButton.removeAttribute("disabled");
   }
   // Keep a copy of the log next to the output so it can be read outside Premiere.
   try {
@@ -456,13 +491,20 @@ async function runCase(def, outFolder, mediaFolder) {
   }
 }
 
-async function runAll(pattern) {
+async function runAll(pattern, started) {
   const cases = await loadCases(pattern);
   const major = String(uxp.host.version).split(".")[0];
   const outFolder = await subfolder(corpusRoot, ["out", "premiere", major], true);
   const mediaFolder = await subfolder(corpusRoot, MEDIA_DIR, false);
   log(`Premiere ${uxp.host.version}: ${cases.length} case(s) -> out/premiere/${major}/`);
   let ok = 0;
-  for (const def of cases) if (await runCase(def, outFolder, mediaFolder)) ok++;
+  const failed = [];
+  for (const [i, def] of cases.entries()) {
+    const fails = failed.length ? `, ${failed.length} failed` : "";
+    setStatus("running", `Running ${i + 1} of ${cases.length}${fails}`, `${def.id} (${elapsed(started)} so far)`, i / cases.length);
+    if (await runCase(def, outFolder, mediaFolder)) ok++;
+    else failed.push(def.id);
+  }
   log(`done: ${ok}/${cases.length} ok`);
+  return { ok, total: cases.length, failed };
 }
