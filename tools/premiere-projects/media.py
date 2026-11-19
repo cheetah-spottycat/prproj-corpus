@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """Generate the corpus's synthetic media with ffmpeg (used only as a fixture generator).
 
-Every file is made from ffmpeg's built-in sources: `testsrc` (colour pattern with a frame
-counter drawn without fonts) and `sine`. No external media, fonts or presets are read.
+Every file is made from ffmpeg's built-in sources. Picture: `smptehdbars`, the SMPTE RP 219
+HD colour bars (75% bars, ramp and PLUGE), with the frame number drawn on top as a 12-bit
+binary strip of boxes, so no fonts are involved. Sound: `sine` at -20 dBFS, the usual
+alignment level; each file has its own frequency so sources can be told apart. No external
+media, fonts or presets are read.
 Outputs are written bit-exact (no encoder tags, no timestamps, single-threaded x264), so a
 rerun with the same ffmpeg build gives the same bytes; `--check` verifies that.
 
@@ -43,16 +46,35 @@ class Recipe:
     args: tuple[str, ...]
 
 
-def video_src(rate: str, size: str = HD) -> list[str]:
-    return ["-f", "lavfi", "-i", f"testsrc=size={size}:rate={rate}:duration={SECONDS}"]
+FRAME_BITS = 12  # frame numbers up to 4095
+
+
+def frame_strip() -> str:
+    """Frame number as boxes in the black block of RP 219's bottom row: two rows of six,
+    most significant bit first. Every bit has a thin outline; a set bit is filled. Positions
+    are fractions of the frame, so the strip scales with any frame size."""
+    parts = ["drawbox=x=iw*0.130:y=ih*0.770:w=iw*0.150:h=ih*0.195:color=white:t=2"]
+    for k in range(FRAME_BITS):
+        bit = FRAME_BITS - 1 - k
+        row, col = divmod(k, 6)
+        box = f"x=iw*(0.136+{col}*0.0235):y=ih*(0.785+{row}*0.090):w=iw*0.018:h=ih*0.070"
+        parts.append(f"drawbox={box}:color=gray:t=1")
+        parts.append(f"drawbox={box}:color=white:t=fill:enable='eq(mod(floor(n/{2 ** bit}),2),1)'")
+    return ",".join(parts)
+
+
+def video_src(rate: str, size: str = HD, seconds: int = SECONDS) -> list[str]:
+    graph = f"smptehdbars=size={size}:rate={rate}:duration={seconds},{frame_strip()}"
+    return ["-f", "lavfi", "-i", graph]
 
 
 def tone_src(freq: int, channels: int = 2, rate: int = 48000) -> list[str]:
-    layout = "stereo" if channels == 2 else "mono"
+    # sine's amplitude is 1/8 (-18 dBFS); 0.8 of that is 0.1 = -20 dBFS peak. Stereo copies the
+    # channel to both sides with `pan` (aformat's upmix would lower it by a 3 dB pan law).
+    layout = "pan=stereo|c0=c0|c1=c0" if channels == 2 else "aformat=channel_layouts=mono"
     return [
         "-f", "lavfi", "-i",
-        f"sine=frequency={freq}:sample_rate={rate}:duration={SECONDS},"
-        f"aformat=channel_layouts={layout}",
+        f"sine=frequency={freq}:sample_rate={rate}:duration={SECONDS},volume=0.8,{layout}",
     ]
 
 
@@ -62,7 +84,7 @@ X264 = ["-c:v", "libx264", "-preset", "medium", "-crf", "23", "-pix_fmt", "yuv42
 PRORES = ["-c:v", "prores_ks", "-profile:v", "0", "-pix_fmt", "yuv422p10le", "-vendor", "apl0"]
 
 RECIPES: tuple[Recipe, ...] = (
-    Recipe("v25_h264_aac.mp4", "25 fps H.264 + 1 kHz stereo AAC",
+    Recipe("v25_h264_aac.mp4", "25 fps H.264 + 1 kHz stereo AAC, -20 dBFS",
            tuple(video_src("25") + tone_src(1000) + X264 + ["-c:a", "aac", "-b:a", "128k"])),
     Recipe("v2398_prores_pcm.mov", "23.976 fps ProRes 422 Proxy + 500 Hz stereo 24-bit PCM",
            tuple(video_src("24000/1001") + tone_src(500) + PRORES + ["-c:a", "pcm_s24le"])),
@@ -80,8 +102,8 @@ RECIPES: tuple[Recipe, ...] = (
            tuple(tone_src(440) + ["-c:a", "pcm_s24le"])),
     Recipe("a48k_880_mono.wav", "880 Hz mono, 48 kHz 24-bit",
            tuple(tone_src(880, channels=1) + ["-c:a", "pcm_s24le"])),
-    Recipe("still_1920x1080.png", "single 1920x1080 test-pattern frame",
-           ("-f", "lavfi", "-i", f"testsrc=size={HD}:rate=1:duration=1", "-frames:v", "1")),
+    Recipe("still_1920x1080.png", "single 1920x1080 RP 219 bars frame (frame number 0)",
+           tuple(video_src("1", HD, 1) + ["-frames:v", "1"])),
 )
 
 
