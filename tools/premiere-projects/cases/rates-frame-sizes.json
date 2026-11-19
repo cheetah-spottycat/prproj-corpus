@@ -1,0 +1,10 @@
+{
+  "id": "rates/frame-sizes",
+  "description": "Sequences made from 1280x720, 3840x2160 and vertical 1080x1920 media, all 25 fps, so the sequence frame size follows the media.",
+  "media": ["v25_h264_720p.mp4", "v25_h264_uhd.mp4", "v25_h264_vertical.mp4"],
+  "sequences": [
+    { "name": "720p", "fromMedia": "v25_h264_720p.mp4" },
+    { "name": "UHD", "fromMedia": "v25_h264_uhd.mp4" },
+    { "name": "Vertical", "fromMedia": "v25_h264_vertical.mp4" }
+  ]
+}

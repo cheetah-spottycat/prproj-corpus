@@ -298,9 +298,21 @@ const OPS = {
       return actions;
     });
   },
+  // createMoveAction shifts a clip by an offset. `by` passes the offset through; `to` is an absolute
+  // start time, turned into the offset from the clip's current start.
   async move(ctx, op) {
     const clip = await clipOf(ctx.sequence, op.clip);
-    transact(ctx.project, "move", () => [clip.createMoveAction(timeFrom(op.to, ctx.rate))]);
+    let shift;
+    if (op.by) {
+      shift = timeFrom(op.by, ctx.rate);
+    } else if (op.to) {
+      const target = BigInt(timeFrom(op.to, ctx.rate).ticks);
+      const start = BigInt((await clip.getStartTime()).ticks);
+      shift = ppro.TickTime.createWithTicks(String(target - start));
+    } else {
+      throw new Error('move needs "to" or "by"');
+    }
+    transact(ctx.project, "move", () => [clip.createMoveAction(shift)]);
   },
   async disable(ctx, op) {
     const clip = await clipOf(ctx.sequence, op.clip);
@@ -345,7 +357,34 @@ const OPS = {
     const item = await mediaItem(ctx.project, op.media);
     transact(ctx.project, "label", () => [item.createSetColorLabelAction(op.color)]);
   },
+  // Video transition on one end of a clip. `match` is a case-insensitive regex that must pick out
+  // exactly one of Premiere's installed video transition match names; on a miss the error lists
+  // them, so a case can be fixed without guessing.
+  async transition(ctx, op) {
+    if (op.clip.kind !== "video") throw new Error("transition: only video clips are supported");
+    const clip = await clipOf(ctx.sequence, op.clip);
+    const matchName = await transitionMatchName(op.match);
+    const duration = op.duration ? timeFrom(op.duration, ctx.rate) : null;
+    // Actions (and the objects they take) are created inside lockedAccess.
+    transact(ctx.project, "transition", () => {
+      const options = new ppro.AddTransitionOptions().setApplyToStart(op.end === "start");
+      if (duration) options.setDuration(duration);
+      if (op.singleSided != null) options.setForceSingleSided(Boolean(op.singleSided));
+      if (op.alignment != null) options.setTransitionAlignment(op.alignment);
+      return [clip.createAddVideoTransitionAction(ppro.TransitionFactory.createVideoTransition(matchName), options)];
+    });
+  },
 };
+
+async function transitionMatchName(pattern) {
+  if (typeof pattern !== "string" || !pattern) throw new Error('transition needs "match"');
+  const names = await ppro.TransitionFactory.getVideoTransitionMatchNames();
+  const re = new RegExp(pattern, "i");
+  const hits = names.filter((n) => re.test(n));
+  if (hits.length === 1) return hits[0];
+  const why = hits.length ? `matches ${hits.length}: ${hits.join(", ")}` : `matches none of: ${names.join(", ")}`;
+  throw new Error(`transition match /${pattern}/ ${why}`);
+}
 
 // ---------------------------------------------------------------- readback
 
@@ -377,16 +416,28 @@ async function readClips(track, mediaRoot) {
   return out;
 }
 
+// Premiere 27.0 returns one entry per transition but every entry is null (the UXP API has no
+// transition track item type yet), so only the count is known. Each entry is recorded as
+// {unreadable: true} rather than dropped, so the truth still says how many transitions exist;
+// fields are filled in if a later version returns real objects.
 async function readTransitions(track) {
   const out = [];
   const items = await track.getTrackItems(ppro.Constants.TrackItemType.TRANSITION, false);
-  for (const item of items) {
-    out.push({
-      name: await item.getName(),
-      matchName: await item.getMatchName(),
-      start: tick(await item.getStartTime()),
-      end: tick(await item.getEndTime()),
-    });
+  for (const item of items || []) {
+    if (!item) {
+      out.push({ unreadable: true });
+      continue;
+    }
+    try {
+      out.push({
+        name: await item.getName(),
+        matchName: await item.getMatchName(),
+        start: tick(await item.getStartTime()),
+        end: tick(await item.getEndTime()),
+      });
+    } catch (e) {
+      out.push({ unreadable: true, error: String(e && e.message ? e.message : e) });
+    }
   }
   return out;
 }

@@ -47,7 +47,18 @@ storytold/filmcraft#4504 (`FILMCRAFT_PREMIERE_TRUTH=<folder>`), which reads `<st
 ```
 
 Extra fields (speed, enabled, bins, labels, component parameters, the case's intent) are allowed;
-that test ignores them.
+that test ignores them. To run it, from a checkout of that pull request's branch:
+
+```sh
+FILMCRAFT_PREMIERE_TRUTH=<corpus>/out/premiere/27 cargo test -p filmcraft-interchange --lib \
+  premiere_corpus_matches_scripting_api_truth -- --ignored --nocapture
+```
+
+Result with Premiere 27.0 (22 projects, 27 sequences): ranges, in points and markers 27/27.
+
+Transitions: Premiere 27.0's API returns them as null, so the truth only records how many there
+are (`{"unreadable": true}` each). The saved XML shows where they landed: the 10- and 20-frame
+cross dissolves sit at frames 75–85 and 70–90, centred on the cut at 80.
 
 ## Generating media
 
@@ -111,14 +122,16 @@ One JSON file per case in `tools/premiere-projects/cases/`, read as data:
 ```
 
 Times are `{"frames": n}` at the sequence rate or `{"ticks": "…"}`. Operations: `overwrite`,
-`insert`, `trim`, `move`, `disable`, `rename`, `trackName`, `marker`, `bin`, `label`. An op works on
+`insert`, `trim` (moving the in point also moves the clip's start), `move` (`to` an absolute start
+or `by` an offset; Premiere's action itself only shifts), `disable`, `rename`, `trackName`, `marker`, `bin`, `label`,
+`transition` (video only: `end` "start" or "end", `match` a regex that must pick exactly one of
+Premiere's video transition match names, optional `duration`, `singleSided`, `alignment`). An op works on
 `sequences[op.sequence || 0]`. `vary` makes one project per value. The case is copied into the
 truth JSON as `case`, so the request and Premiere's readback can be compared.
 
 Not reachable through UXP yet: setting clip speed and time remapping (speed can only be read).
-Those need the FilmCraft round-trip route (FCP7 XML / OTIO imported into Premiere). Adding
-transitions is in the API (`TransitionFactory`, `createAddVideoTransitionAction`) but not
-implemented here yet.
+Those need the FilmCraft round-trip route (FCP7 XML / OTIO imported into Premiere). Audio
+transitions have no UXP action yet.
 
 ## Licence
 
