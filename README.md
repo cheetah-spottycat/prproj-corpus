@@ -82,9 +82,11 @@ The plugin creates, saves and closes projects. Close your own projects first.
 Quirk seen in Premiere 27.0: `createSequenceFromMedia` drops everything after the last dot in the
 sequence name ("23.976" is stored as "23"), so case sequence names avoid dots.
 
-Known noise in saved projects: Premiere stores the current window layout (`WorkspaceDefinition`,
-several MB, including monitor geometry) in every project. It holds no personal details, but it
-differs per machine and bloats the files. Not solved yet.
+Window layout: with **Import workspace from projects** on, Premiere also saves the current window
+layout (`WorkspaceDefinition`, several MB, including monitor geometry) into every project, and it
+grows from case to case. The plugin switches that preference off for the run and restores it
+afterwards (both steps are logged), which also keeps its panel open. Projects then hold no
+`WorkspaceDefinition` at all and are about 85 KB of XML (12 KB gzipped) each.
 
 ## Cases
 
