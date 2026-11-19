@@ -79,6 +79,9 @@ Needs Premiere Pro 25.6 or later and Adobe's **UXP Developer Tool** (from the Cr
 
 The plugin creates, saves and closes projects. Close your own projects first.
 
+Quirk seen in Premiere 27.0: `createSequenceFromMedia` drops everything after the last dot in the
+sequence name ("23.976" is stored as "23"), so case sequence names avoid dots.
+
 Known noise in saved projects: Premiere stores the current window layout (`WorkspaceDefinition`,
 several MB, including monitor geometry) in every project. It holds no personal details, but it
 differs per machine and bloats the files. Not solved yet.
