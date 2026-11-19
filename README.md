@@ -71,13 +71,20 @@ Needs Premiere Pro 25.6 or later and Adobe's **UXP Developer Tool** (from the Cr
      run if your user name appears.
 1. Quit Premiere if it has `media/` open, then `python tools/premiere-projects/media.py`.
 2. In the UXP Developer Tool: **Add Plugin**, pick `tools/premiere-projects/plugin/manifest.json`,
-   then **Load** with Premiere running. Open the panel (Window ▸ UXP Plugins ▸ FilmCraft corpus).
+   then **Load** with Premiere running. Open any project first, then open the panel (Window ▸ UXP
+   Plugins ▸ FilmCraft corpus) and **dock it** into a panel group. A floating panel, or one opened
+   on the start screen with no project open, disappears as soon as the run opens its first project.
+   Window ▸ Workspaces ▸ Save Changes to This Workspace keeps it docked for next time.
 3. **Corpus folder…**: choose this repository's root. Optionally type a case-id regex, then **Run**.
    Each case gets a new project in `out/premiere/<major>/`, is saved, closed, reopened, read back and
-   closed again. The panel logs `ok` or `FAIL <reason>` per case.
+   closed again. Premiere doesn't redraw the panel during a run (about a minute for all cases), so
+   it shows the result, and the log with `ok` or `FAIL <reason>` per case, only at the end. The log
+   is also written to `out/last-run.log`.
 4. `python tools/premiere-projects/check.py` before sharing anything.
 
-The plugin creates, saves and closes projects. Close your own projects first.
+The plugin creates, saves and closes projects. Close your own projects first. It keeps an empty
+placeholder project (`tmp/run-host.prproj`, gitignored) open during the run, because Premiere hides
+all panels when the last project closes, and leaves it open afterwards so the result stays visible.
 
 Quirk seen in Premiere 27.0: `createSequenceFromMedia` drops everything after the last dot in the
 sequence name ("23.976" is stored as "23"), so case sequence names avoid dots.

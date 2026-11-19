@@ -3,7 +3,11 @@
 <head>
   <meta charset="utf-8">
   <style>
-    body { font-family: sans-serif; font-size: 12px; padding: 8px; }
+    /* Plain elements default to black text in Premiere's UXP. Use the host theme's colours, with a
+       light grey for Premiere's usual dark theme if the host doesn't provide them. */
+    body { font-family: sans-serif; font-size: 12px; padding: 8px;
+           color: var(--uxp-host-text-color, #d6d6d6); }
+    #log, #status, #root { color: var(--uxp-host-text-color, #d6d6d6); }
     .row { display: flex; gap: 6px; margin-bottom: 6px; align-items: center; }
     #filter { flex: 1; }
     #root { opacity: 0.8; word-break: break-all; }
@@ -31,7 +35,7 @@
   </div>
   <div id="status">
     <div id="status-title">Idle</div>
-    <div id="status-detail">Choose the corpus folder, then Run.</div>
+    <div id="status-detail">Choose the corpus folder, then Run. The panel doesn't update during a run (about a minute for all cases); the result shows here when it's done.</div>
     <div id="bar-track"><div id="bar-fill"></div></div>
   </div>
   <div id="log"></div>

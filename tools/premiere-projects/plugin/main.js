@@ -99,10 +99,12 @@ document.getElementById("run").addEventListener("click", async () => {
   logLines.length = 0;
   document.getElementById("log").textContent = "";
   const started = Date.now();
-  setStatus("running", "Starting…", "Reading cases", 0);
+  // Premiere 27 doesn't redraw the panel while a run works on projects (tried: per-case updates,
+  // pixel widths, a timer between cases), so there is no live progress: the result shows at the end.
+  setStatus("running", "Running…", "The panel updates when the run is done.", 0);
   const restoreWorkspacePref = keepWorkspaceDuringRun();
   try {
-    const { ok, total, failed } = await runAll(pattern, started);
+    const { ok, total, failed } = await runAll(pattern);
     if (total === 0) {
       setStatus("done-fail", "Nothing to run", "No case id matches the filter.", 0);
     } else if (failed.length === 0) {
@@ -524,7 +526,35 @@ async function runCase(def, outFolder, mediaFolder) {
   }
 }
 
-async function runAll(pattern, started) {
+// Each case closes its project. When the last open project closes, Premiere goes back to its
+// start screen and hides every panel, this one included. An empty placeholder project in tmp/
+// (gitignored, never part of the corpus) stays open during the run so that never happens. It is
+// left open afterwards too, so the finished status stays visible; close it whenever you like.
+const HOST_PROJECT = "run-host.prproj";
+
+async function openHostProject() {
+  try {
+    const tmp = await subfolder(corpusRoot, ["tmp"], true);
+    let exists = false;
+    try {
+      exists = Boolean(await tmp.getEntry(HOST_PROJECT));
+    } catch (_) {
+      exists = false;
+    }
+    const path = joinNative(tmp, HOST_PROJECT);
+    const host = exists
+      ? await ppro.Project.open(path, new ppro.OpenProjectOptions().setAddToMRUList(false))
+      : await ppro.Project.createProject(path);
+    if (!host) throw new Error("no project returned");
+    log(`note: placeholder project tmp/${HOST_PROJECT} open for this run (left open afterwards)`);
+    return host;
+  } catch (e) {
+    log(`note: could not open a placeholder project (${e && e.message ? e.message : e}); the panel may be hidden during the run`);
+    return null;
+  }
+}
+
+async function runAll(pattern) {
   const cases = await loadCases(pattern);
   const major = String(uxp.host.version).split(".")[0];
   const outFolder = await subfolder(corpusRoot, ["out", "premiere", major], true);
@@ -532,9 +562,8 @@ async function runAll(pattern, started) {
   log(`Premiere ${uxp.host.version}: ${cases.length} case(s) -> out/premiere/${major}/`);
   let ok = 0;
   const failed = [];
+  if (cases.length) await openHostProject();
   for (const [i, def] of cases.entries()) {
-    const fails = failed.length ? `, ${failed.length} failed` : "";
-    setStatus("running", `Running ${i + 1} of ${cases.length}${fails}`, `${def.id} (${elapsed(started)} so far)`, i / cases.length);
     if (await runCase(def, outFolder, mediaFolder)) ok++;
     else failed.push(def.id);
   }
