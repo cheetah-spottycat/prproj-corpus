@@ -1,0 +1,15 @@
+# Local runs and scratch
+/out/
+/tmp/
+*.log
+# Premiere side files written next to projects
+Adobe Premiere Pro Auto-Save/
+Adobe Premiere Pro Audio Previews/
+Adobe Premiere Pro Video Previews/
+*.pek
+*.cfa
+*.prmdc
+*.prmdl
+# Generated media stays out of git until the size budget is agreed
+/media/*
+!/media/README.md
