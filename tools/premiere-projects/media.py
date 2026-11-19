@@ -27,8 +27,10 @@ ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUT = ROOT / "media"
 MANIFEST = "SHA256SUMS"
 
-# Small but realistic: even dimensions for 4:2:0, 16:9.
-SIZE = "160x90"
+# Realistic frame sizes: sequences made from this media get the settings real projects have, and
+# Motion / scale parameters are in the pixel ranges an importer will meet. The test pattern
+# compresses well, so H.264 stays small; ProRes uses the Proxy profile for the same reason.
+HD = "1920x1080"
 SECONDS = 4
 
 BITEXACT = ["-map_metadata", "-1", "-fflags", "+bitexact", "-flags:v", "+bitexact", "-flags:a", "+bitexact"]
@@ -41,8 +43,8 @@ class Recipe:
     args: tuple[str, ...]
 
 
-def video_src(rate: str) -> list[str]:
-    return ["-f", "lavfi", "-i", f"testsrc=size={SIZE}:rate={rate}:duration={SECONDS}"]
+def video_src(rate: str, size: str = HD) -> list[str]:
+    return ["-f", "lavfi", "-i", f"testsrc=size={size}:rate={rate}:duration={SECONDS}"]
 
 
 def tone_src(freq: int, channels: int = 2, rate: int = 48000) -> list[str]:
@@ -56,23 +58,30 @@ def tone_src(freq: int, channels: int = 2, rate: int = 48000) -> list[str]:
 
 X264 = ["-c:v", "libx264", "-preset", "medium", "-crf", "23", "-pix_fmt", "yuv420p", "-threads", "1",
         "-x264-params", "threads=1:lookahead-threads=1"]
-PRORES = ["-c:v", "prores_ks", "-profile:v", "3", "-pix_fmt", "yuv422p10le", "-vendor", "apl0"]
+# Profile 0 = ProRes 422 Proxy: still 10-bit 4:2:2, at a fraction of 422 HQ's size.
+PRORES = ["-c:v", "prores_ks", "-profile:v", "0", "-pix_fmt", "yuv422p10le", "-vendor", "apl0"]
 
 RECIPES: tuple[Recipe, ...] = (
     Recipe("v25_h264_aac.mp4", "25 fps H.264 + 1 kHz stereo AAC",
            tuple(video_src("25") + tone_src(1000) + X264 + ["-c:a", "aac", "-b:a", "128k"])),
-    Recipe("v2398_prores_pcm.mov", "23.976 fps ProRes 422 HQ + 500 Hz stereo 24-bit PCM",
+    Recipe("v2398_prores_pcm.mov", "23.976 fps ProRes 422 Proxy + 500 Hz stereo 24-bit PCM",
            tuple(video_src("24000/1001") + tone_src(500) + PRORES + ["-c:a", "pcm_s24le"])),
     Recipe("v2997_h264_aac.mp4", "29.97 fps H.264 + 750 Hz stereo AAC",
            tuple(video_src("30000/1001") + tone_src(750) + X264 + ["-c:a", "aac", "-b:a", "128k"])),
     Recipe("v5994_h264.mp4", "59.94 fps H.264, no audio",
            tuple(video_src("60000/1001") + X264)),
+    Recipe("v25_h264_720p.mp4", "1280x720 25 fps H.264, no audio",
+           tuple(video_src("25", "1280x720") + X264)),
+    Recipe("v25_h264_uhd.mp4", "3840x2160 25 fps H.264, no audio",
+           tuple(video_src("25", "3840x2160") + X264)),
+    Recipe("v25_h264_vertical.mp4", "1080x1920 (vertical) 25 fps H.264, no audio",
+           tuple(video_src("25", "1080x1920") + X264)),
     Recipe("a48k_440_stereo.wav", "440 Hz stereo, 48 kHz 24-bit",
            tuple(tone_src(440) + ["-c:a", "pcm_s24le"])),
     Recipe("a48k_880_mono.wav", "880 Hz mono, 48 kHz 24-bit",
            tuple(tone_src(880, channels=1) + ["-c:a", "pcm_s24le"])),
-    Recipe("still_160x90.png", "single test-pattern frame",
-           ("-f", "lavfi", "-i", f"testsrc=size={SIZE}:rate=1:duration=1", "-frames:v", "1")),
+    Recipe("still_1920x1080.png", "single 1920x1080 test-pattern frame",
+           ("-f", "lavfi", "-i", f"testsrc=size={HD}:rate=1:duration=1", "-frames:v", "1")),
 )
 
 

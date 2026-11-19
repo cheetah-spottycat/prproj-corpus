@@ -1,0 +1,9 @@
+{
+  "id": "basic/two-clips-gap",
+  "description": "Second clip overwritten at frame 125 on V1/A1, leaving a one-second gap.",
+  "media": ["v25_h264_aac.mp4", "a48k_440_stereo.wav"],
+  "sequences": [{ "name": "Main", "fromMedia": "v25_h264_aac.mp4" }],
+  "ops": [
+    { "op": "overwrite", "media": "v25_h264_aac.mp4", "at": { "frames": 125 }, "video": 0, "audio": 0 }
+  ]
+}

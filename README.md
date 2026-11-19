@@ -12,10 +12,12 @@ is something others can build on, modelled on `storytold/photocraft-corpus`.
 ```text
 tools/premiere-projects/
   media.py       synthetic media recipes (ffmpeg as a fixture generator)
-  plugin/        UXP plugin that builds, saves, reopens and reads back each case (to do)
-  cases/         case definitions, as data (to do)
+  plugin/        UXP plugin that builds, saves, reopens and reads back each case
+  cases/         case definitions, as data (see "Cases" below)
+  check.py       privacy and truth checks on generated projects
 media/           generated synthetic media (not committed until the size budget is settled)
-premiere/<version>/<area>/<case>.prproj + <case>.json   generated projects (to do)
+out/premiere/<major>/<area>__<case>.prproj + .json   local runs (gitignored)
+premiere/<major>/…   published projects (later)
 ```
 
 ## Rules
@@ -55,6 +57,56 @@ python tools/premiere-projects/media.py --check    # regenerates into a temp fol
 ```
 
 Needs ffmpeg with libx264 and prores_ks on PATH.
+
+## Running the generator
+
+Needs Premiere Pro 25.6 or later and Adobe's **UXP Developer Tool** (from the Creative Cloud app).
+
+0. **One-time Premiere setup** (the API can't change these):
+   - **Settings ▸ Plugins ▸ Enable Developer Mode**, then restart Premiere (needed for the UXP
+     Developer Tool). Switch it off again when you're not generating.
+   - **Settings ▸ Media Cache**: point the media cache at a neutral folder outside your user
+     profile (for example `H:\fc-media-cache`). Premiere writes the peak-file and conformed-audio
+     paths into every project, and the default is under `C:\Users\<you>\…`; `check.py` fails the
+     run if your user name appears.
+1. Quit Premiere if it has `media/` open, then `python tools/premiere-projects/media.py`.
+2. In the UXP Developer Tool: **Add Plugin**, pick `tools/premiere-projects/plugin/manifest.json`,
+   then **Load** with Premiere running. Open the panel (Window ▸ UXP Plugins ▸ FilmCraft corpus).
+3. **Corpus folder…**: choose this repository's root. Optionally type a case-id regex, then **Run**.
+   Each case gets a new project in `out/premiere/<major>/`, is saved, closed, reopened, read back and
+   closed again. The panel logs `ok` or `FAIL <reason>` per case.
+4. `python tools/premiere-projects/check.py` before sharing anything.
+
+The plugin creates, saves and closes projects. Close your own projects first.
+
+Known noise in saved projects: Premiere stores the current window layout (`WorkspaceDefinition`,
+several MB, including monitor geometry) in every project. It holds no personal details, but it
+differs per machine and bloats the files. Not solved yet.
+
+## Cases
+
+One JSON file per case in `tools/premiere-projects/cases/`, read as data:
+
+```json
+{
+  "id": "trim/in-out",
+  "description": "…",
+  "media": ["v25_h264_aac.mp4"],
+  "sequences": [{ "name": "Main", "fromMedia": "v25_h264_aac.mp4" }],
+  "ops": [{ "op": "trim", "clip": { "kind": "video", "track": 0, "index": 0 }, "in": { "frames": 10 } }],
+  "vary": { "param": "ops.0.in.frames", "values": [0, 5, 10] }
+}
+```
+
+Times are `{"frames": n}` at the sequence rate or `{"ticks": "…"}`. Operations: `overwrite`,
+`insert`, `trim`, `move`, `disable`, `rename`, `trackName`, `marker`, `bin`, `label`. An op works on
+`sequences[op.sequence || 0]`. `vary` makes one project per value. The case is copied into the
+truth JSON as `case`, so the request and Premiere's readback can be compared.
+
+Not reachable through UXP yet: setting clip speed and time remapping (speed can only be read).
+Those need the FilmCraft round-trip route (FCP7 XML / OTIO imported into Premiere). Adding
+transitions is in the API (`TransitionFactory`, `createAddVideoTransitionAction`) but not
+implemented here yet.
 
 ## Licence
 

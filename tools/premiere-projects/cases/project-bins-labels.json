@@ -1,0 +1,13 @@
+{
+  "id": "project/bins-labels",
+  "description": "Media filed into bins (one nested), with colour labels; the sequence is unchanged.",
+  "media": ["v25_h264_aac.mp4", "a48k_440_stereo.wav", "still_1920x1080.png"],
+  "sequences": [{ "name": "Main", "fromMedia": "v25_h264_aac.mp4" }],
+  "ops": [
+    { "op": "bin", "name": "Footage", "items": ["v25_h264_aac.mp4"] },
+    { "op": "bin", "name": "Audio", "items": ["a48k_440_stereo.wav"] },
+    { "op": "bin", "name": "Stills", "parent": "Footage", "items": ["still_1920x1080.png"] },
+    { "op": "label", "media": "v25_h264_aac.mp4", "color": 2 },
+    { "op": "label", "media": "a48k_440_stereo.wav", "color": 5 }
+  ]
+}

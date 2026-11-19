@@ -1,0 +1,11 @@
+{
+  "id": "markers/sequence",
+  "description": "Sequence markers of each type, with a duration, comment and colour.",
+  "media": ["v25_h264_aac.mp4"],
+  "sequences": [{ "name": "Main", "fromMedia": "v25_h264_aac.mp4" }],
+  "ops": [
+    { "op": "marker", "name": "Comment", "type": "comment", "at": { "frames": 0 } },
+    { "op": "marker", "name": "Chapter", "type": "chapter", "at": { "frames": 12 }, "comment": "Chapter one" },
+    { "op": "marker", "name": "Long", "type": "comment", "at": { "frames": 30 }, "duration": { "frames": 20 }, "color": 3 }
+  ]
+}

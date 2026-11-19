@@ -1,0 +1,9 @@
+{
+  "id": "trim/move",
+  "description": "The V1 clip moved to start at frame 37.",
+  "media": ["v25_h264_aac.mp4"],
+  "sequences": [{ "name": "Main", "fromMedia": "v25_h264_aac.mp4" }],
+  "ops": [
+    { "op": "move", "clip": { "kind": "video", "track": 0, "index": 0 }, "to": { "frames": 37 } }
+  ]
+}

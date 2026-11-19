@@ -1,0 +1,10 @@
+{
+  "id": "tracks/names",
+  "description": "V1 and A1 renamed.",
+  "media": ["v25_h264_aac.mp4"],
+  "sequences": [{ "name": "Main", "fromMedia": "v25_h264_aac.mp4" }],
+  "ops": [
+    { "op": "trackName", "kind": "video", "track": 0, "name": "Picture" },
+    { "op": "trackName", "kind": "audio", "track": 0, "name": "Dialogue" }
+  ]
+}

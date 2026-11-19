@@ -1,0 +1,7 @@
+{
+  "id": "basic/single-clip",
+  "description": "A 25 fps sequence made from one clip; nothing else changed.",
+  "media": ["v25_h264_aac.mp4"],
+  "sequences": [{ "name": "Main", "fromMedia": "v25_h264_aac.mp4" }],
+  "ops": []
+}

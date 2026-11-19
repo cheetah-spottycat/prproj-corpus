@@ -1,0 +1,9 @@
+{
+  "id": "trim/in-out",
+  "description": "The V1 clip's source in point moved to frame 10 and out point to frame 80.",
+  "media": ["v25_h264_aac.mp4"],
+  "sequences": [{ "name": "Main", "fromMedia": "v25_h264_aac.mp4" }],
+  "ops": [
+    { "op": "trim", "clip": { "kind": "video", "track": 0, "index": 0 }, "in": { "frames": 10 }, "out": { "frames": 80 } }
+  ]
+}

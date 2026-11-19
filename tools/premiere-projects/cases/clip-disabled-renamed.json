@@ -1,0 +1,10 @@
+{
+  "id": "clip/disabled-renamed",
+  "description": "The V1 clip disabled and renamed on the timeline.",
+  "media": ["v25_h264_aac.mp4"],
+  "sequences": [{ "name": "Main", "fromMedia": "v25_h264_aac.mp4" }],
+  "ops": [
+    { "op": "disable", "clip": { "kind": "video", "track": 0, "index": 0 } },
+    { "op": "rename", "clip": { "kind": "video", "track": 0, "index": 0 }, "name": "Renamed clip" }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "id": "org.filmcraft.corpus.premiere-projects",
+  "name": "FilmCraft corpus generator",
+  "version": "0.1.0",
+  "main": "index.html",
+  "manifestVersion": 5,
+  "host": { "app": "premierepro", "minVersion": "25.6.0" },
+  "requiredPermissions": { "localFileSystem": "request" },
+  "entrypoints": [
+    {
+      "type": "panel",
+      "id": "generator",
+      "label": { "default": "FilmCraft corpus" },
+      "minimumSize": { "width": 320, "height": 240 },
+      "maximumSize": { "width": 2000, "height": 2000 },
+      "preferredDockedSize": { "width": 360, "height": 420 },
+      "preferredFloatingSize": { "width": 480, "height": 420 }
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "id": "basic/multitrack",
+  "description": "Clips on V2/A2 and a separate WAV on A3.",
+  "media": ["v25_h264_aac.mp4", "a48k_440_stereo.wav", "still_1920x1080.png"],
+  "sequences": [{ "name": "Main", "fromMedia": "v25_h264_aac.mp4" }],
+  "ops": [
+    { "op": "overwrite", "media": "still_1920x1080.png", "at": { "frames": 25 }, "video": 1, "audio": 1 },
+    { "op": "overwrite", "media": "a48k_440_stereo.wav", "at": { "frames": 10 }, "video": 2, "audio": 2 }
+  ]
+}

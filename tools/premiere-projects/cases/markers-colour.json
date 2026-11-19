@@ -1,0 +1,10 @@
+{
+  "id": "markers/colour",
+  "description": "One sequence marker per colour index.",
+  "media": ["v25_h264_aac.mp4"],
+  "sequences": [{ "name": "Main", "fromMedia": "v25_h264_aac.mp4" }],
+  "ops": [
+    { "op": "marker", "name": "Colour", "type": "comment", "at": { "frames": 5 }, "color": 0 }
+  ],
+  "vary": { "param": "ops.0.color", "values": [0, 1, 2, 3, 4, 5, 6, 7] }
+}

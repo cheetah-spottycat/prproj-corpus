@@ -1,0 +1,12 @@
+{
+  "id": "rates/sequence-from-media",
+  "description": "One sequence per media frame rate, each made from its own clip.",
+  "media": ["v25_h264_aac.mp4", "v2398_prores_pcm.mov", "v2997_h264_aac.mp4", "v5994_h264.mp4"],
+  "sequences": [
+    { "name": "25", "fromMedia": "v25_h264_aac.mp4" },
+    { "name": "23.976", "fromMedia": "v2398_prores_pcm.mov" },
+    { "name": "29.97", "fromMedia": "v2997_h264_aac.mp4" },
+    { "name": "59.94", "fromMedia": "v5994_h264.mp4" }
+  ],
+  "ops": []
+}
