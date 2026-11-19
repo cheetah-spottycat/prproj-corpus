@@ -47,6 +47,37 @@ function elapsed(since) {
 
 let running = false;
 
+// Every case opens a project. With "import workspace with projects" on, Premiere switches to the
+// layout stored in that project, which doesn't contain this panel, so the panel disappears
+// mid-run. Turn the preference off for the run and put the user's value back afterwards.
+function keepWorkspaceDuringRun() {
+  const pref = ppro.AppPreference;
+  const key = ppro.Constants.PreferenceKey.IMPORT_WORKSPACE;
+  let original;
+  try {
+    original = pref.getValue(key);
+  } catch (e) {
+    log(`note: could not read the import-workspace preference (${e}); leaving it alone`);
+    return () => {};
+  }
+  try {
+    pref.setValue(key, false, ppro.Constants.PropertyType.PERSISTENT);
+    log(`note: "import workspace with projects" off for this run (was ${original})`);
+  } catch (e) {
+    log(`note: could not switch off "import workspace with projects" (${e})`);
+    return () => {};
+  }
+  return () => {
+    const value = original === "true" ? true : original === "false" ? false : original;
+    try {
+      pref.setValue(key, value, ppro.Constants.PropertyType.PERSISTENT);
+      log(`note: "import workspace with projects" restored to ${original}`);
+    } catch (e) {
+      log(`WARNING: could not restore "import workspace with projects" to ${original}: ${e}`);
+    }
+  };
+}
+
 document.getElementById("choose").addEventListener("click", async () => {
   const folder = await fs.getFolder();
   if (folder) {
@@ -69,6 +100,7 @@ document.getElementById("run").addEventListener("click", async () => {
   document.getElementById("log").textContent = "";
   const started = Date.now();
   setStatus("running", "Starting…", "Reading cases", 0);
+  const restoreWorkspacePref = keepWorkspaceDuringRun();
   try {
     const { ok, total, failed } = await runAll(pattern, started);
     if (total === 0) {
@@ -82,6 +114,7 @@ document.getElementById("run").addEventListener("click", async () => {
     log(`fatal: ${e && e.stack ? e.stack : e}`);
     setStatus("done-fail", "Stopped by an error", String(e && e.message ? e.message : e), 1);
   } finally {
+    restoreWorkspacePref();
     running = false;
     runButton.removeAttribute("disabled");
   }
