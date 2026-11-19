@@ -15,6 +15,8 @@ tools/premiere-projects/
   plugin/        UXP plugin that builds, saves, reopens and reads back each case
   cases/         case definitions, as data (see "Cases" below)
   check.py       privacy and truth checks on generated projects
+tools/format/    walk.py (inspect a generated project), inventory.py (names each importer reads)
+docs/format/     what is known about the .prproj format, claim by claim
 media/           generated synthetic media (not committed until the size budget is settled)
 out/premiere/<major>/<area>__<case>.prproj + .json   local runs (gitignored)
 premiere/<major>/…   published projects (later)
