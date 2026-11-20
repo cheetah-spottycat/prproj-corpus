@@ -1,11 +1,20 @@
-# FilmCraft corpus (local prototype)
+# prproj-corpus
 
-Generated Premiere Pro projects for testing FilmCraft's `.prproj` import. Each project is made from
-scratch by the scripts under `tools/`, and each comes with Premiere's own readback of what it
-contains (truth JSON).
+Generated Premiere Pro projects for testing `.prproj` importers, made with FilmCraft's importers in
+mind, plus a claim-by-claim description of the format checked against them
+([docs/format/prproj.md](docs/format/prproj.md)). Each project is made from scratch by the scripts
+under `tools/`, and each comes with Premiere's own readback of what it contains (truth JSON).
 
-**Status: local prototype, not published and not proposed yet.** The plan is to publish once there
-is something others can build on, modelled on `storytold/photocraft-corpus`.
+**Status: early.** The generator, 20 case files and the format notes work and are checked
+(`tools/format/claims.py`). The generated projects and media aren't committed yet: run the
+generator to produce them. Open questions are listed at the end of the format notes. Not yet
+proposed to the FilmCraft project; the layout follows `storytold/photocraft-corpus` so it could
+become a shared corpus later.
+
+**Not affiliated.** This is an independent project, not affiliated with or endorsed by Adobe or
+by the FilmCraft / storytold project. Adobe and Premiere Pro are trademarks of Adobe. Premiere is
+only used through its public scripting API; nothing from inside the application is read or
+included (see "Rules").
 
 ## Layout
 
@@ -170,5 +179,6 @@ transitions have no UXP action yet.
 
 ## Licence
 
-MIT OR Apache-2.0 for the scripts; generated media and projects CC0-1.0 (to be confirmed with
-maintainers before publishing).
+Scripts, plugin and documentation: MIT OR Apache-2.0, at your option ([LICENSE-MIT](LICENSE-MIT),
+[LICENSE-APACHE](LICENSE-APACHE)). Generated media and projects, once published here, are meant
+to be CC0-1.0.
