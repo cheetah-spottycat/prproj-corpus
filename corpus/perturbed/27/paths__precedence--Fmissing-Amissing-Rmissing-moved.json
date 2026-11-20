@@ -1,0 +1,156 @@
+{
+  "generator": {
+    "name": "filmcraft-corpus/premiere-projects",
+    "version": "0.1.0",
+    "mode": "open perturbed"
+  },
+  "premiere": {
+    "version": "27.0.0"
+  },
+  "case": {
+    "id": "paths/precedence--Fmissing-Amissing-Rmissing-moved",
+    "description": "Which of FilePath, ActualMediaFilePath and RelativePath Premiere follows on open when they disagree. Each path points to its own identical copy of the media (here), to a file that doesn't exist (missing), or is removed (absent). The project either records its own location (in-place) or still records the base project's (moved).",
+    "perturbedFrom": {
+      "id": "basic/single-clip",
+      "premiere": {
+        "version": "27.0.0"
+      }
+    },
+    "variant": {
+      "FilePath": "missing",
+      "ActualMediaFilePath": "missing",
+      "RelativePath": "missing",
+      "project": "moved"
+    },
+    "changes": {
+      "FilePath": {
+        "mode": "missing",
+        "points to": "out/perturbed/media/missing-F/v25_h264_aac.mp4",
+        "exists": false
+      },
+      "ActualMediaFilePath": {
+        "mode": "missing",
+        "points to": "out/perturbed/media/missing-A/v25_h264_aac.mp4",
+        "exists": false
+      },
+      "RelativePath": {
+        "mode": "missing",
+        "points to": "out/perturbed/media/missing-R/v25_h264_aac.mp4",
+        "exists": false
+      },
+      "project location": "out/premiere/27/basic__single-clip.prproj (the base's, unchanged)"
+    }
+  },
+  "sequences": [
+    {
+      "name": "Main",
+      "frameRate": 25,
+      "ticksPerFrame": 10160640000,
+      "width": 1920,
+      "height": 1080,
+      "end": {
+        "ticks": "1016064000000"
+      },
+      "videoTracks": [
+        {
+          "index": 0,
+          "name": "Video 1",
+          "muted": false,
+          "clips": [
+            {
+              "name": "v25_h264_aac.mp4",
+              "start": {
+                "ticks": "0"
+              },
+              "end": {
+                "ticks": "1016064000000"
+              },
+              "inPoint": {
+                "ticks": "0"
+              },
+              "outPoint": {
+                "ticks": "1016064000000"
+              },
+              "speed": 1,
+              "reversed": false,
+              "disabled": false,
+              "projectItem": "v25_h264_aac.mp4",
+              "media": "<corpus>/out/perturbed/media/A/v25_h264_aac.mp4"
+            }
+          ],
+          "transitions": []
+        },
+        {
+          "index": 1,
+          "name": "Video 2",
+          "muted": false,
+          "clips": [],
+          "transitions": []
+        },
+        {
+          "index": 2,
+          "name": "Video 3",
+          "muted": false,
+          "clips": [],
+          "transitions": []
+        }
+      ],
+      "audioTracks": [
+        {
+          "index": 0,
+          "name": "Audio 1",
+          "muted": false,
+          "clips": [
+            {
+              "name": "v25_h264_aac.mp4",
+              "start": {
+                "ticks": "0"
+              },
+              "end": {
+                "ticks": "1016064000000"
+              },
+              "inPoint": {
+                "ticks": "0"
+              },
+              "outPoint": {
+                "ticks": "1016064000000"
+              },
+              "speed": 1,
+              "reversed": false,
+              "disabled": false,
+              "projectItem": "v25_h264_aac.mp4",
+              "media": "<corpus>/out/perturbed/media/A/v25_h264_aac.mp4"
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "name": "Audio 2",
+          "muted": false,
+          "clips": []
+        },
+        {
+          "index": 2,
+          "name": "Audio 3",
+          "muted": false,
+          "clips": []
+        }
+      ],
+      "markers": []
+    }
+  ],
+  "bins": [
+    {
+      "name": "Main",
+      "type": "item",
+      "colorLabel": 5
+    },
+    {
+      "name": "v25_h264_aac.mp4",
+      "type": "item",
+      "colorLabel": 1,
+      "mediaPath": "<corpus>/out/perturbed/media/A/v25_h264_aac.mp4",
+      "offline": false
+    }
+  ]
+}

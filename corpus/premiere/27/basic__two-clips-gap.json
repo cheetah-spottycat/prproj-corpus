@@ -1,0 +1,189 @@
+{
+  "generator": {
+    "name": "filmcraft-corpus/premiere-projects",
+    "version": "0.1.0"
+  },
+  "premiere": {
+    "version": "27.0.0"
+  },
+  "case": {
+    "id": "basic/two-clips-gap",
+    "description": "Second clip overwritten at frame 125 on V1/A1, leaving a one-second gap.",
+    "media": [
+      "v25_h264_aac.mp4",
+      "a48k_440_stereo.wav"
+    ],
+    "sequences": [
+      {
+        "name": "Main",
+        "fromMedia": "v25_h264_aac.mp4"
+      }
+    ],
+    "ops": [
+      {
+        "op": "overwrite",
+        "media": "v25_h264_aac.mp4",
+        "at": {
+          "frames": 125
+        },
+        "video": 0,
+        "audio": 0
+      }
+    ]
+  },
+  "sequences": [
+    {
+      "name": "Main",
+      "frameRate": 25,
+      "ticksPerFrame": 10160640000,
+      "width": 1920,
+      "height": 1080,
+      "end": {
+        "ticks": "2286144000000"
+      },
+      "videoTracks": [
+        {
+          "index": 0,
+          "name": "Video 1",
+          "muted": false,
+          "clips": [
+            {
+              "name": "v25_h264_aac.mp4",
+              "start": {
+                "ticks": "0"
+              },
+              "end": {
+                "ticks": "1016064000000"
+              },
+              "inPoint": {
+                "ticks": "0"
+              },
+              "outPoint": {
+                "ticks": "1016064000000"
+              },
+              "speed": 1,
+              "reversed": false,
+              "disabled": false,
+              "projectItem": "v25_h264_aac.mp4",
+              "media": "v25_h264_aac.mp4"
+            },
+            {
+              "name": "v25_h264_aac.mp4",
+              "start": {
+                "ticks": "1270080000000"
+              },
+              "end": {
+                "ticks": "2286144000000"
+              },
+              "inPoint": {
+                "ticks": "0"
+              },
+              "outPoint": {
+                "ticks": "1016064000000"
+              },
+              "speed": 1,
+              "reversed": false,
+              "disabled": false,
+              "projectItem": "v25_h264_aac.mp4",
+              "media": "v25_h264_aac.mp4"
+            }
+          ],
+          "transitions": []
+        },
+        {
+          "index": 1,
+          "name": "Video 2",
+          "muted": false,
+          "clips": [],
+          "transitions": []
+        },
+        {
+          "index": 2,
+          "name": "Video 3",
+          "muted": false,
+          "clips": [],
+          "transitions": []
+        }
+      ],
+      "audioTracks": [
+        {
+          "index": 0,
+          "name": "Audio 1",
+          "muted": false,
+          "clips": [
+            {
+              "name": "v25_h264_aac.mp4",
+              "start": {
+                "ticks": "0"
+              },
+              "end": {
+                "ticks": "1016064000000"
+              },
+              "inPoint": {
+                "ticks": "0"
+              },
+              "outPoint": {
+                "ticks": "1016064000000"
+              },
+              "speed": 1,
+              "reversed": false,
+              "disabled": false,
+              "projectItem": "v25_h264_aac.mp4",
+              "media": "v25_h264_aac.mp4"
+            },
+            {
+              "name": "v25_h264_aac.mp4",
+              "start": {
+                "ticks": "1270080000000"
+              },
+              "end": {
+                "ticks": "2286144000000"
+              },
+              "inPoint": {
+                "ticks": "0"
+              },
+              "outPoint": {
+                "ticks": "1016064000000"
+              },
+              "speed": 1,
+              "reversed": false,
+              "disabled": false,
+              "projectItem": "v25_h264_aac.mp4",
+              "media": "v25_h264_aac.mp4"
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "name": "Audio 2",
+          "muted": false,
+          "clips": []
+        },
+        {
+          "index": 2,
+          "name": "Audio 3",
+          "muted": false,
+          "clips": []
+        }
+      ],
+      "markers": []
+    }
+  ],
+  "bins": [
+    {
+      "name": "Main",
+      "type": "item",
+      "colorLabel": 5
+    },
+    {
+      "name": "a48k_440_stereo.wav",
+      "type": "item",
+      "colorLabel": 2
+    },
+    {
+      "name": "v25_h264_aac.mp4",
+      "type": "item",
+      "colorLabel": 1
+    }
+  ]
+}

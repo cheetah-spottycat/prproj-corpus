@@ -1,0 +1,157 @@
+{
+  "generator": {
+    "name": "filmcraft-corpus/premiere-projects",
+    "version": "0.1.0",
+    "mode": "open perturbed"
+  },
+  "premiere": {
+    "version": "27.0.0"
+  },
+  "case": {
+    "id": "paths/fresh-key--Fhere-Ahere-Rmissing-in-place",
+    "description": "paths/isolated again, with a FileKey new to Premiere in every copy. In paths/precedence and paths/isolated Premiere linked a copy no field pointed to whenever FilePath was missing, even after a restart, so it remembers media locations outside the project. With a fresh FileKey it has to go by the project's own fields.",
+    "perturbedFrom": {
+      "id": "basic/single-clip",
+      "premiere": {
+        "version": "27.0.0"
+      }
+    },
+    "variant": {
+      "FilePath": "here",
+      "ActualMediaFilePath": "here",
+      "RelativePath": "missing",
+      "project": "in-place"
+    },
+    "changes": {
+      "FilePath": {
+        "mode": "here",
+        "points to": "out/perturbed/media/fresh-key/3-F/v25_h264_aac.mp4",
+        "exists": true
+      },
+      "ActualMediaFilePath": {
+        "mode": "here",
+        "points to": "out/perturbed/media/fresh-key/2-A/v25_h264_aac.mp4",
+        "exists": true
+      },
+      "RelativePath": {
+        "mode": "missing",
+        "points to": "out/perturbed/void/missing-R/v25_h264_aac.mp4",
+        "exists": false
+      },
+      "FileKey": "replaced with 24569e21-84ed-5099-8397-db302f0c13ca (uuid5 of the variant name, new to Premiere)",
+      "project location": "out/perturbed/27/paths__fresh-key--Fhere-Ahere-Rmissing-in-place.prproj (its own)"
+    }
+  },
+  "sequences": [
+    {
+      "name": "Main",
+      "frameRate": 25,
+      "ticksPerFrame": 10160640000,
+      "width": 1920,
+      "height": 1080,
+      "end": {
+        "ticks": "1016064000000"
+      },
+      "videoTracks": [
+        {
+          "index": 0,
+          "name": "Video 1",
+          "muted": false,
+          "clips": [
+            {
+              "name": "v25_h264_aac.mp4",
+              "start": {
+                "ticks": "0"
+              },
+              "end": {
+                "ticks": "1016064000000"
+              },
+              "inPoint": {
+                "ticks": "0"
+              },
+              "outPoint": {
+                "ticks": "1016064000000"
+              },
+              "speed": 1,
+              "reversed": false,
+              "disabled": false,
+              "projectItem": "v25_h264_aac.mp4",
+              "media": "<corpus>/out/perturbed/media/fresh-key/3-F/v25_h264_aac.mp4"
+            }
+          ],
+          "transitions": []
+        },
+        {
+          "index": 1,
+          "name": "Video 2",
+          "muted": false,
+          "clips": [],
+          "transitions": []
+        },
+        {
+          "index": 2,
+          "name": "Video 3",
+          "muted": false,
+          "clips": [],
+          "transitions": []
+        }
+      ],
+      "audioTracks": [
+        {
+          "index": 0,
+          "name": "Audio 1",
+          "muted": false,
+          "clips": [
+            {
+              "name": "v25_h264_aac.mp4",
+              "start": {
+                "ticks": "0"
+              },
+              "end": {
+                "ticks": "1016064000000"
+              },
+              "inPoint": {
+                "ticks": "0"
+              },
+              "outPoint": {
+                "ticks": "1016064000000"
+              },
+              "speed": 1,
+              "reversed": false,
+              "disabled": false,
+              "projectItem": "v25_h264_aac.mp4",
+              "media": "<corpus>/out/perturbed/media/fresh-key/3-F/v25_h264_aac.mp4"
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "name": "Audio 2",
+          "muted": false,
+          "clips": []
+        },
+        {
+          "index": 2,
+          "name": "Audio 3",
+          "muted": false,
+          "clips": []
+        }
+      ],
+      "markers": []
+    }
+  ],
+  "bins": [
+    {
+      "name": "Main",
+      "type": "item",
+      "colorLabel": 5
+    },
+    {
+      "name": "v25_h264_aac.mp4",
+      "type": "item",
+      "colorLabel": 1,
+      "mediaPath": "<corpus>/out/perturbed/media/fresh-key/3-F/v25_h264_aac.mp4",
+      "offline": false
+    }
+  ]
+}

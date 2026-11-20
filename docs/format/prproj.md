@@ -30,12 +30,11 @@ Premiere Pro 27.0 on Windows, with a German user interface (which matters: see
 
 Every confirmed or settled row cites one or more checks as `[claim: id]`. Each check is a short
 function in [`tools/format/claims.py`](../../tools/format/claims.py) that reads the generated
-projects, and where it can compares them with Premiere's own readback in the truth JSON. Run it
-on a corpus you generated yourself:
+projects, and where it can compares them with Premiere's own readback in the truth JSON. Run it on the committed corpus (no Premiere needed) or on a run of your own:
 
 ```sh
-python tools/format/claims.py out/premiere/27 --doc docs/format/prproj.md
-python tools/format/claims.py out/premiere/27 --self-test
+python tools/format/claims.py corpus/premiere/27 --doc docs/format/prproj.md
+python tools/format/claims.py corpus/premiere/27 --self-test
 ```
 
 The first runs every check and also checks this page: a confirmed or settled row without a
@@ -129,7 +128,7 @@ Media ─ FilePath, ActualMediaFilePath, RelativePath, Title
 
 | Claim | Status | Evidence |
 |---|---|---|
-| `Media` holds `FilePath` and `ActualMediaFilePath` (absolute) and `RelativePath`, relative to the folder holding the project file (`..\..\..\media\v25_h264_aac.mp4` for a project in `out/premiere/27/`), with Windows separators on Windows. | confirmed | every corpus project [claim: media.relative-path] |
+| `Media` holds `FilePath` and `ActualMediaFilePath` (absolute) and `RelativePath`, relative to the folder holding the project file (`..\..\..\media\v25_h264_aac.mp4` for a project in `corpus/premiere/27/` or a local run in `out/premiere/27/`), with Windows separators on Windows. | confirmed | every corpus project [claim: media.relative-path] |
 | Which path the importers try first: #1694 `FilePath` › `ActualMediaFilePath`, keeping `RelativePath` as an alternative; #3428 `ActualMediaFilePath` › `FilePath` › `RelativePath`; #4504 `ActualMediaFilePath` › `FilePath`, falling back to `RelativePath` when the absolute path is foreign or missing. | **conflict, partly settled: `FilePath` first** | see the next two rows [claim: paths.filepath-wins] |
 | **When `FilePath` names an existing file, Premiere links that file**, whatever `ActualMediaFilePath` and `RelativePath` say (an existing copy, a missing file, or removed), and whether or not the project records a different location for itself (moved). So #1694's order matches Premiere; #3428 and #4504 can open a different file than Premiere would when both absolute paths exist. | confirmed on open (17 perturbed variants, three folder layouts, original and fresh `FileKey`) | `paths/precedence`, `paths/isolated`, `paths/fresh-key` [claim: paths.filepath-wins] [claim: paths.perturbed-unsaved] |
 | **When `FilePath` is missing, the project file doesn't decide.** In 24 perturbed variants Premiere linked a copy of the same media it had seen earlier (in that session or before a restart), the same one for every variant of a set. It ignored an `ActualMediaFilePath` that named a different existing copy, never followed `RelativePath`, didn't pick the alphabetically first copy, and never left the media offline, even with all three paths broken or with a `FileKey` it had never seen. So it finds media through state outside the project, probably by file identity. What it does with `ActualMediaFilePath` and `RelativePath` on a machine that has never seen the file is **open**: that needs copies with unique content per variant. An importer can't reproduce machine state, so trying `ActualMediaFilePath`, then `RelativePath` resolved against the project folder, after `FilePath`, is a reasonable choice, not a copy of Premiere. | observed (state-dependent); fallback order **open** | as above [claim: paths.fallback-not-from-fields] |

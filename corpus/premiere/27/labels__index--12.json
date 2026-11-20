@@ -1,0 +1,36 @@
+{
+  "generator": {
+    "name": "filmcraft-corpus/premiere-projects",
+    "version": "0.1.0"
+  },
+  "premiere": {
+    "version": "27.0.0"
+  },
+  "case": {
+    "id": "labels/index--12",
+    "description": "One media item given each of the 16 label indices, with no sequence, to show how the API's label index is stored.",
+    "media": [
+      "v25_h264_aac.mp4"
+    ],
+    "ops": [
+      {
+        "op": "label",
+        "media": "v25_h264_aac.mp4",
+        "color": 12
+      }
+    ],
+    "variedFrom": {
+      "id": "labels/index",
+      "param": "ops.0.color",
+      "value": 12
+    }
+  },
+  "sequences": [],
+  "bins": [
+    {
+      "name": "v25_h264_aac.mp4",
+      "type": "item",
+      "colorLabel": 12
+    }
+  ]
+}

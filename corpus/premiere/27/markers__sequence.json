@@ -1,0 +1,200 @@
+{
+  "generator": {
+    "name": "filmcraft-corpus/premiere-projects",
+    "version": "0.1.0"
+  },
+  "premiere": {
+    "version": "27.0.0"
+  },
+  "case": {
+    "id": "markers/sequence",
+    "description": "Sequence markers of each type, with a duration, comment and colour.",
+    "media": [
+      "v25_h264_aac.mp4"
+    ],
+    "sequences": [
+      {
+        "name": "Main",
+        "fromMedia": "v25_h264_aac.mp4"
+      }
+    ],
+    "ops": [
+      {
+        "op": "marker",
+        "name": "Comment",
+        "type": "comment",
+        "at": {
+          "frames": 0
+        }
+      },
+      {
+        "op": "marker",
+        "name": "Chapter",
+        "type": "chapter",
+        "at": {
+          "frames": 12
+        },
+        "comment": "Chapter one"
+      },
+      {
+        "op": "marker",
+        "name": "Long",
+        "type": "comment",
+        "at": {
+          "frames": 30
+        },
+        "duration": {
+          "frames": 20
+        },
+        "color": 3
+      }
+    ]
+  },
+  "sequences": [
+    {
+      "name": "Main",
+      "frameRate": 25,
+      "ticksPerFrame": 10160640000,
+      "width": 1920,
+      "height": 1080,
+      "end": {
+        "ticks": "1016064000000"
+      },
+      "videoTracks": [
+        {
+          "index": 0,
+          "name": "Video 1",
+          "muted": false,
+          "clips": [
+            {
+              "name": "v25_h264_aac.mp4",
+              "start": {
+                "ticks": "0"
+              },
+              "end": {
+                "ticks": "1016064000000"
+              },
+              "inPoint": {
+                "ticks": "0"
+              },
+              "outPoint": {
+                "ticks": "1016064000000"
+              },
+              "speed": 1,
+              "reversed": false,
+              "disabled": false,
+              "projectItem": "v25_h264_aac.mp4",
+              "media": "v25_h264_aac.mp4"
+            }
+          ],
+          "transitions": []
+        },
+        {
+          "index": 1,
+          "name": "Video 2",
+          "muted": false,
+          "clips": [],
+          "transitions": []
+        },
+        {
+          "index": 2,
+          "name": "Video 3",
+          "muted": false,
+          "clips": [],
+          "transitions": []
+        }
+      ],
+      "audioTracks": [
+        {
+          "index": 0,
+          "name": "Audio 1",
+          "muted": false,
+          "clips": [
+            {
+              "name": "v25_h264_aac.mp4",
+              "start": {
+                "ticks": "0"
+              },
+              "end": {
+                "ticks": "1016064000000"
+              },
+              "inPoint": {
+                "ticks": "0"
+              },
+              "outPoint": {
+                "ticks": "1016064000000"
+              },
+              "speed": 1,
+              "reversed": false,
+              "disabled": false,
+              "projectItem": "v25_h264_aac.mp4",
+              "media": "v25_h264_aac.mp4"
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "name": "Audio 2",
+          "muted": false,
+          "clips": []
+        },
+        {
+          "index": 2,
+          "name": "Audio 3",
+          "muted": false,
+          "clips": []
+        }
+      ],
+      "markers": [
+        {
+          "name": "Comment",
+          "type": "Comment",
+          "start": {
+            "ticks": "0"
+          },
+          "duration": {
+            "ticks": "0"
+          },
+          "comment": "",
+          "colorIndex": 0
+        },
+        {
+          "name": "Chapter",
+          "type": "Chapter",
+          "start": {
+            "ticks": "121927680000"
+          },
+          "duration": {
+            "ticks": "0"
+          },
+          "comment": "Chapter one",
+          "colorIndex": 1
+        },
+        {
+          "name": "Long",
+          "type": "Comment",
+          "start": {
+            "ticks": "304819200000"
+          },
+          "duration": {
+            "ticks": "203212800000"
+          },
+          "comment": "",
+          "colorIndex": 3
+        }
+      ]
+    }
+  ],
+  "bins": [
+    {
+      "name": "Main",
+      "type": "item",
+      "colorLabel": 5
+    },
+    {
+      "name": "v25_h264_aac.mp4",
+      "type": "item",
+      "colorLabel": 1
+    }
+  ]
+}

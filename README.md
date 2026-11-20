@@ -5,11 +5,27 @@ mind, plus a claim-by-claim description of the format checked against them
 ([docs/format/prproj.md](docs/format/prproj.md)). Each project is made from scratch by the scripts
 under `tools/`, and each comes with Premiere's own readback of what it contains (truth JSON).
 
-**Status: early.** The generator, 20 case files and the format notes work and are checked
-(`tools/format/claims.py`). The generated projects and media aren't committed yet: run the
-generator to produce them. Open questions are listed at the end of the format notes. Not yet
-proposed to the FilmCraft project; the layout follows `storytold/photocraft-corpus` so it could
-become a shared corpus later.
+**Status: early.** 42 generated projects (Premiere Pro 27.0) and 41 perturbed copies are in
+[`corpus/`](corpus/), each with Premiere's readback; the format notes are checked against them by
+`tools/format/claims.py`, which needs no Premiere. Open questions are listed at the end of the
+format notes. Not yet proposed to the FilmCraft project; the layout follows
+`storytold/photocraft-corpus` so it could become a shared corpus later.
+
+**How it relates to other sample projects.** py-premiere's MIT-licensed samples (80 projects
+saved by Premiere 26.3, most with a scripting-API export) are what storytold/filmcraft#4504's
+truth test was first run against; this corpus uses the same truth format and complements them:
+
+- every project is generated from a case file, so anyone with Premiere can regenerate it, and
+  each case varies one thing, so two projects that differ in one parameter show which XML it
+  controls;
+- Premiere Pro 27.0 instead of 26.3;
+- perturbed copies show what Premiere does with what it *reads* (which media path it follows),
+  which no saved project can show;
+- the format notes cite a check for every confirmed claim, and a self-test shows each check can
+  fail.
+
+Real-world projects stay essential: generated cases are small and cover only what a case asks
+for.
 
 **Not affiliated.** This is an independent project, not affiliated with or endorsed by Adobe or
 by the FilmCraft / storytold project. Adobe and Premiere Pro are trademarks of Adobe. Premiere is
@@ -29,10 +45,11 @@ tools/premiere-projects/
 tools/format/    claims.py (checks docs/format/ against the corpus), walk.py (inspect a project),
                  inventory.py (names each importer reads)
 docs/format/     what is known about the .prproj format, claim by claim
-media/           generated synthetic media (not committed until the size budget is settled)
+  publish.py     copies a checked local run into corpus/
+corpus/          generated projects and perturbed copies with readback (CC0, see corpus/README.md)
+media/           generated synthetic media (regenerate with media.py; not committed)
 out/premiere/<major>/<area>__<case>.prproj + .json   local runs (gitignored)
 out/perturbed/<major>/…   perturbed copies and their readback (gitignored)
-premiere/<major>/…   published projects (later)
 ```
 
 ## Rules
@@ -69,11 +86,12 @@ Extra fields (speed, enabled, bins, labels, component parameters, the case's int
 that test ignores them. To run it, from a checkout of that pull request's branch:
 
 ```sh
-FILMCRAFT_PREMIERE_TRUTH=<corpus>/out/premiere/27 cargo test -p filmcraft-interchange --lib \
+FILMCRAFT_PREMIERE_TRUTH=<this repo>/corpus/premiere/27 cargo test -p filmcraft-interchange --lib \
   premiere_corpus_matches_scripting_api_truth -- --ignored --nocapture
 ```
 
-Result with Premiere 27.0 (22 projects, 27 sequences): ranges, in points and markers 27/27.
+Result at that pull request's head `b48392fa59f2`, on `corpus/premiere/27` (42 projects, 31
+sequences): ranges, in points and markers 31/31, no project fails.
 
 Transitions: Premiere 27.0's API returns them as null, so the truth only records how many there
 are (`{"unreadable": true}` each). The saved XML shows where they landed: the 10- and 20-frame
@@ -111,7 +129,8 @@ Needs Premiere Pro 25.6 or later and Adobe's **UXP Developer Tool** (from the Cr
    closed again. Premiere doesn't redraw the panel during a run (about a minute for all cases), so
    it shows the result, and the log with `ok` or `FAIL <reason>` per case, only at the end. The log
    is also written to `out/last-run.log` (Open perturbed: `out/last-open-perturbed.log`).
-4. `python tools/premiere-projects/check.py` before sharing anything, and
+4. `python tools/premiere-projects/check.py` before sharing anything, then
+   `python tools/premiere-projects/publish.py` to copy the run into `corpus/`, and
    `python tools/format/claims.py out/premiere/<major> --doc docs/format/prproj.md` to check the
    format notes against what you generated.
 

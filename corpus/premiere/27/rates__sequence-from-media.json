@@ -1,0 +1,445 @@
+{
+  "generator": {
+    "name": "filmcraft-corpus/premiere-projects",
+    "version": "0.1.0"
+  },
+  "premiere": {
+    "version": "27.0.0"
+  },
+  "case": {
+    "id": "rates/sequence-from-media",
+    "description": "One sequence per media frame rate, each made from its own clip. Names avoid dots: createSequenceFromMedia drops everything after the last dot (\"23.976\" became \"23\" in Premiere 27.0).",
+    "media": [
+      "v25_h264_aac.mp4",
+      "v2398_prores_pcm.mov",
+      "v2997_h264_aac.mp4",
+      "v5994_h264.mp4"
+    ],
+    "sequences": [
+      {
+        "name": "25 fps",
+        "fromMedia": "v25_h264_aac.mp4"
+      },
+      {
+        "name": "23976 fps",
+        "fromMedia": "v2398_prores_pcm.mov"
+      },
+      {
+        "name": "2997 fps",
+        "fromMedia": "v2997_h264_aac.mp4"
+      },
+      {
+        "name": "5994 fps",
+        "fromMedia": "v5994_h264.mp4"
+      }
+    ],
+    "ops": []
+  },
+  "sequences": [
+    {
+      "name": "23976 fps",
+      "frameRate": 23.976023976023978,
+      "ticksPerFrame": 10594584000,
+      "width": 1920,
+      "height": 1080,
+      "end": {
+        "ticks": "1017080064000"
+      },
+      "videoTracks": [
+        {
+          "index": 0,
+          "name": "Video 1",
+          "muted": false,
+          "clips": [
+            {
+              "name": "v2398_prores_pcm.mov",
+              "start": {
+                "ticks": "0"
+              },
+              "end": {
+                "ticks": "1017080064000"
+              },
+              "inPoint": {
+                "ticks": "0"
+              },
+              "outPoint": {
+                "ticks": "1017080064000"
+              },
+              "speed": 1,
+              "reversed": false,
+              "disabled": false,
+              "projectItem": "v2398_prores_pcm.mov",
+              "media": "v2398_prores_pcm.mov"
+            }
+          ],
+          "transitions": []
+        },
+        {
+          "index": 1,
+          "name": "Video 2",
+          "muted": false,
+          "clips": [],
+          "transitions": []
+        },
+        {
+          "index": 2,
+          "name": "Video 3",
+          "muted": false,
+          "clips": [],
+          "transitions": []
+        }
+      ],
+      "audioTracks": [
+        {
+          "index": 0,
+          "name": "Audio 1",
+          "muted": false,
+          "clips": [
+            {
+              "name": "v2398_prores_pcm.mov",
+              "start": {
+                "ticks": "0"
+              },
+              "end": {
+                "ticks": "1017080064000"
+              },
+              "inPoint": {
+                "ticks": "0"
+              },
+              "outPoint": {
+                "ticks": "1017080064000"
+              },
+              "speed": 1,
+              "reversed": false,
+              "disabled": false,
+              "projectItem": "v2398_prores_pcm.mov",
+              "media": "v2398_prores_pcm.mov"
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "name": "Audio 2",
+          "muted": false,
+          "clips": []
+        },
+        {
+          "index": 2,
+          "name": "Audio 3",
+          "muted": false,
+          "clips": []
+        }
+      ],
+      "markers": []
+    },
+    {
+      "name": "25 fps",
+      "frameRate": 25,
+      "ticksPerFrame": 10160640000,
+      "width": 1920,
+      "height": 1080,
+      "end": {
+        "ticks": "1016064000000"
+      },
+      "videoTracks": [
+        {
+          "index": 0,
+          "name": "Video 1",
+          "muted": false,
+          "clips": [
+            {
+              "name": "v25_h264_aac.mp4",
+              "start": {
+                "ticks": "0"
+              },
+              "end": {
+                "ticks": "1016064000000"
+              },
+              "inPoint": {
+                "ticks": "0"
+              },
+              "outPoint": {
+                "ticks": "1016064000000"
+              },
+              "speed": 1,
+              "reversed": false,
+              "disabled": false,
+              "projectItem": "v25_h264_aac.mp4",
+              "media": "v25_h264_aac.mp4"
+            }
+          ],
+          "transitions": []
+        },
+        {
+          "index": 1,
+          "name": "Video 2",
+          "muted": false,
+          "clips": [],
+          "transitions": []
+        },
+        {
+          "index": 2,
+          "name": "Video 3",
+          "muted": false,
+          "clips": [],
+          "transitions": []
+        }
+      ],
+      "audioTracks": [
+        {
+          "index": 0,
+          "name": "Audio 1",
+          "muted": false,
+          "clips": [
+            {
+              "name": "v25_h264_aac.mp4",
+              "start": {
+                "ticks": "0"
+              },
+              "end": {
+                "ticks": "1016064000000"
+              },
+              "inPoint": {
+                "ticks": "0"
+              },
+              "outPoint": {
+                "ticks": "1016064000000"
+              },
+              "speed": 1,
+              "reversed": false,
+              "disabled": false,
+              "projectItem": "v25_h264_aac.mp4",
+              "media": "v25_h264_aac.mp4"
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "name": "Audio 2",
+          "muted": false,
+          "clips": []
+        },
+        {
+          "index": 2,
+          "name": "Audio 3",
+          "muted": false,
+          "clips": []
+        }
+      ],
+      "markers": []
+    },
+    {
+      "name": "2997 fps",
+      "frameRate": 29.97002997002997,
+      "ticksPerFrame": 8475667200,
+      "width": 1920,
+      "height": 1080,
+      "end": {
+        "ticks": "1017080064000"
+      },
+      "videoTracks": [
+        {
+          "index": 0,
+          "name": "Video 1",
+          "muted": false,
+          "clips": [
+            {
+              "name": "v2997_h264_aac.mp4",
+              "start": {
+                "ticks": "0"
+              },
+              "end": {
+                "ticks": "1017080064000"
+              },
+              "inPoint": {
+                "ticks": "0"
+              },
+              "outPoint": {
+                "ticks": "1017080064000"
+              },
+              "speed": 1,
+              "reversed": false,
+              "disabled": false,
+              "projectItem": "v2997_h264_aac.mp4",
+              "media": "v2997_h264_aac.mp4"
+            }
+          ],
+          "transitions": []
+        },
+        {
+          "index": 1,
+          "name": "Video 2",
+          "muted": false,
+          "clips": [],
+          "transitions": []
+        },
+        {
+          "index": 2,
+          "name": "Video 3",
+          "muted": false,
+          "clips": [],
+          "transitions": []
+        }
+      ],
+      "audioTracks": [
+        {
+          "index": 0,
+          "name": "Audio 1",
+          "muted": false,
+          "clips": [
+            {
+              "name": "v2997_h264_aac.mp4",
+              "start": {
+                "ticks": "0"
+              },
+              "end": {
+                "ticks": "1017080064000"
+              },
+              "inPoint": {
+                "ticks": "0"
+              },
+              "outPoint": {
+                "ticks": "1017080064000"
+              },
+              "speed": 1,
+              "reversed": false,
+              "disabled": false,
+              "projectItem": "v2997_h264_aac.mp4",
+              "media": "v2997_h264_aac.mp4"
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "name": "Audio 2",
+          "muted": false,
+          "clips": []
+        },
+        {
+          "index": 2,
+          "name": "Audio 3",
+          "muted": false,
+          "clips": []
+        }
+      ],
+      "markers": []
+    },
+    {
+      "name": "5994 fps",
+      "frameRate": 59.94005994005994,
+      "ticksPerFrame": 4237833600,
+      "width": 1920,
+      "height": 1080,
+      "end": {
+        "ticks": "1017080064000"
+      },
+      "videoTracks": [
+        {
+          "index": 0,
+          "name": "Video 1",
+          "muted": false,
+          "clips": [
+            {
+              "name": "v5994_h264.mp4",
+              "start": {
+                "ticks": "0"
+              },
+              "end": {
+                "ticks": "1017080064000"
+              },
+              "inPoint": {
+                "ticks": "0"
+              },
+              "outPoint": {
+                "ticks": "1017080064000"
+              },
+              "speed": 1,
+              "reversed": false,
+              "disabled": false,
+              "projectItem": "v5994_h264.mp4",
+              "media": "v5994_h264.mp4"
+            }
+          ],
+          "transitions": []
+        },
+        {
+          "index": 1,
+          "name": "Video 2",
+          "muted": false,
+          "clips": [],
+          "transitions": []
+        },
+        {
+          "index": 2,
+          "name": "Video 3",
+          "muted": false,
+          "clips": [],
+          "transitions": []
+        }
+      ],
+      "audioTracks": [
+        {
+          "index": 0,
+          "name": "Audio 1",
+          "muted": false,
+          "clips": []
+        },
+        {
+          "index": 1,
+          "name": "Audio 2",
+          "muted": false,
+          "clips": []
+        },
+        {
+          "index": 2,
+          "name": "Audio 3",
+          "muted": false,
+          "clips": []
+        }
+      ],
+      "markers": []
+    }
+  ],
+  "bins": [
+    {
+      "name": "23976 fps",
+      "type": "item",
+      "colorLabel": 5
+    },
+    {
+      "name": "25 fps",
+      "type": "item",
+      "colorLabel": 5
+    },
+    {
+      "name": "2997 fps",
+      "type": "item",
+      "colorLabel": 5
+    },
+    {
+      "name": "5994 fps",
+      "type": "item",
+      "colorLabel": 5
+    },
+    {
+      "name": "v2398_prores_pcm.mov",
+      "type": "item",
+      "colorLabel": 1
+    },
+    {
+      "name": "v25_h264_aac.mp4",
+      "type": "item",
+      "colorLabel": 1
+    },
+    {
+      "name": "v2997_h264_aac.mp4",
+      "type": "item",
+      "colorLabel": 1
+    },
+    {
+      "name": "v5994_h264.mp4",
+      "type": "item",
+      "colorLabel": 0
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "generator": {
+    "name": "filmcraft-corpus/perturb.py"
+  },
+  "case": {
+    "id": "paths/precedence--Fhere-Amissing-Rhere-moved",
+    "description": "Which of FilePath, ActualMediaFilePath and RelativePath Premiere follows on open when they disagree. Each path points to its own identical copy of the media (here), to a file that doesn't exist (missing), or is removed (absent). The project either records its own location (in-place) or still records the base project's (moved).",
+    "perturbedFrom": {
+      "id": "basic/single-clip",
+      "premiere": {
+        "version": "27.0.0"
+      }
+    },
+    "variant": {
+      "FilePath": "here",
+      "ActualMediaFilePath": "missing",
+      "RelativePath": "here",
+      "project": "moved"
+    },
+    "changes": {
+      "FilePath": {
+        "mode": "here",
+        "points to": "out/perturbed/media/F/v25_h264_aac.mp4",
+        "exists": true
+      },
+      "ActualMediaFilePath": {
+        "mode": "missing",
+        "points to": "out/perturbed/media/missing-A/v25_h264_aac.mp4",
+        "exists": false
+      },
+      "RelativePath": {
+        "mode": "here",
+        "points to": "out/perturbed/media/R/v25_h264_aac.mp4",
+        "exists": true
+      },
+      "project location": "out/premiere/27/basic__single-clip.prproj (the base's, unchanged)"
+    },
+    "projectSha256": "ba778e4195ceebd7125ec590eb073ab2f621aadd9894704f83eaa07ed9103dee"
+  }
+}

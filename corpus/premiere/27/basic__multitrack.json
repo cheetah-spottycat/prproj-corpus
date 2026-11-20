@@ -1,0 +1,206 @@
+{
+  "generator": {
+    "name": "filmcraft-corpus/premiere-projects",
+    "version": "0.1.0"
+  },
+  "premiere": {
+    "version": "27.0.0"
+  },
+  "case": {
+    "id": "basic/multitrack",
+    "description": "Clips on V2/A2 and a separate WAV on A3.",
+    "media": [
+      "v25_h264_aac.mp4",
+      "a48k_440_stereo.wav",
+      "still_1920x1080.png"
+    ],
+    "sequences": [
+      {
+        "name": "Main",
+        "fromMedia": "v25_h264_aac.mp4"
+      }
+    ],
+    "ops": [
+      {
+        "op": "overwrite",
+        "media": "still_1920x1080.png",
+        "at": {
+          "frames": 25
+        },
+        "video": 1,
+        "audio": 1
+      },
+      {
+        "op": "overwrite",
+        "media": "a48k_440_stereo.wav",
+        "at": {
+          "frames": 10
+        },
+        "video": 2,
+        "audio": 2
+      }
+    ]
+  },
+  "sequences": [
+    {
+      "name": "Main",
+      "frameRate": 25,
+      "ticksPerFrame": 10160640000,
+      "width": 1920,
+      "height": 1080,
+      "end": {
+        "ticks": "1524096000000"
+      },
+      "videoTracks": [
+        {
+          "index": 0,
+          "name": "Video 1",
+          "muted": false,
+          "clips": [
+            {
+              "name": "v25_h264_aac.mp4",
+              "start": {
+                "ticks": "0"
+              },
+              "end": {
+                "ticks": "1016064000000"
+              },
+              "inPoint": {
+                "ticks": "0"
+              },
+              "outPoint": {
+                "ticks": "1016064000000"
+              },
+              "speed": 1,
+              "reversed": false,
+              "disabled": false,
+              "projectItem": "v25_h264_aac.mp4",
+              "media": "v25_h264_aac.mp4"
+            }
+          ],
+          "transitions": []
+        },
+        {
+          "index": 1,
+          "name": "Video 2",
+          "muted": false,
+          "clips": [
+            {
+              "name": "still_1920x1080.png",
+              "start": {
+                "ticks": "254016000000"
+              },
+              "end": {
+                "ticks": "1524096000000"
+              },
+              "inPoint": {
+                "ticks": "914457600000000"
+              },
+              "outPoint": {
+                "ticks": "915727680000000"
+              },
+              "speed": 1,
+              "reversed": false,
+              "disabled": false,
+              "projectItem": "still_1920x1080.png",
+              "media": "still_1920x1080.png"
+            }
+          ],
+          "transitions": []
+        },
+        {
+          "index": 2,
+          "name": "Video 3",
+          "muted": false,
+          "clips": [],
+          "transitions": []
+        }
+      ],
+      "audioTracks": [
+        {
+          "index": 0,
+          "name": "Audio 1",
+          "muted": false,
+          "clips": [
+            {
+              "name": "v25_h264_aac.mp4",
+              "start": {
+                "ticks": "0"
+              },
+              "end": {
+                "ticks": "1016064000000"
+              },
+              "inPoint": {
+                "ticks": "0"
+              },
+              "outPoint": {
+                "ticks": "1016064000000"
+              },
+              "speed": 1,
+              "reversed": false,
+              "disabled": false,
+              "projectItem": "v25_h264_aac.mp4",
+              "media": "v25_h264_aac.mp4"
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "name": "Audio 2",
+          "muted": false,
+          "clips": []
+        },
+        {
+          "index": 2,
+          "name": "Audio 3",
+          "muted": false,
+          "clips": [
+            {
+              "name": "a48k_440_stereo.wav",
+              "start": {
+                "ticks": "101606400000"
+              },
+              "end": {
+                "ticks": "1117670400000"
+              },
+              "inPoint": {
+                "ticks": "0"
+              },
+              "outPoint": {
+                "ticks": "1016064000000"
+              },
+              "speed": 1,
+              "reversed": false,
+              "disabled": false,
+              "projectItem": "a48k_440_stereo.wav",
+              "media": "a48k_440_stereo.wav"
+            }
+          ]
+        }
+      ],
+      "markers": []
+    }
+  ],
+  "bins": [
+    {
+      "name": "Main",
+      "type": "item",
+      "colorLabel": 5
+    },
+    {
+      "name": "a48k_440_stereo.wav",
+      "type": "item",
+      "colorLabel": 2
+    },
+    {
+      "name": "still_1920x1080.png",
+      "type": "item",
+      "colorLabel": 3
+    },
+    {
+      "name": "v25_h264_aac.mp4",
+      "type": "item",
+      "colorLabel": 1
+    }
+  ]
+}

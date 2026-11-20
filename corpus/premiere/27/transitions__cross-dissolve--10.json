@@ -1,0 +1,238 @@
+{
+  "generator": {
+    "name": "filmcraft-corpus/premiere-projects",
+    "version": "0.1.0"
+  },
+  "premiere": {
+    "version": "27.0.0"
+  },
+  "case": {
+    "id": "transitions/cross-dissolve--10",
+    "description": "Two copies of the 25 fps clip cut together at frame 80, each with 20 frames of handle (A's out at 80; B's in at 20, which moves its start to 100, then moved back to start at 80), and a cross dissolve on A's end, centred on the cut by default. Varied over the duration.",
+    "media": [
+      "v25_h264_aac.mp4"
+    ],
+    "sequences": [
+      {
+        "name": "Main",
+        "fromMedia": "v25_h264_aac.mp4"
+      }
+    ],
+    "ops": [
+      {
+        "op": "trim",
+        "clip": {
+          "kind": "video",
+          "track": 0,
+          "index": 0
+        },
+        "out": {
+          "frames": 80
+        }
+      },
+      {
+        "op": "overwrite",
+        "media": "v25_h264_aac.mp4",
+        "at": {
+          "frames": 80
+        },
+        "video": 0,
+        "audio": 0
+      },
+      {
+        "op": "trim",
+        "clip": {
+          "kind": "video",
+          "track": 0,
+          "index": 1
+        },
+        "in": {
+          "frames": 20
+        }
+      },
+      {
+        "op": "move",
+        "clip": {
+          "kind": "video",
+          "track": 0,
+          "index": 1
+        },
+        "to": {
+          "frames": 80
+        }
+      },
+      {
+        "op": "transition",
+        "clip": {
+          "kind": "video",
+          "track": 0,
+          "index": 0
+        },
+        "end": "end",
+        "match": "cross ?dissolve",
+        "duration": {
+          "frames": 10
+        }
+      }
+    ],
+    "variedFrom": {
+      "id": "transitions/cross-dissolve",
+      "param": "ops.4.duration.frames",
+      "value": 10
+    }
+  },
+  "sequences": [
+    {
+      "name": "Main",
+      "frameRate": 25,
+      "ticksPerFrame": 10160640000,
+      "width": 1920,
+      "height": 1080,
+      "end": {
+        "ticks": "1828915200000"
+      },
+      "videoTracks": [
+        {
+          "index": 0,
+          "name": "Video 1",
+          "muted": false,
+          "clips": [
+            {
+              "name": "v25_h264_aac.mp4",
+              "start": {
+                "ticks": "0"
+              },
+              "end": {
+                "ticks": "812851200000"
+              },
+              "inPoint": {
+                "ticks": "0"
+              },
+              "outPoint": {
+                "ticks": "812851200000"
+              },
+              "speed": 1,
+              "reversed": false,
+              "disabled": false,
+              "projectItem": "v25_h264_aac.mp4",
+              "media": "v25_h264_aac.mp4"
+            },
+            {
+              "name": "v25_h264_aac.mp4",
+              "start": {
+                "ticks": "812851200000"
+              },
+              "end": {
+                "ticks": "1625702400000"
+              },
+              "inPoint": {
+                "ticks": "203212800000"
+              },
+              "outPoint": {
+                "ticks": "1016064000000"
+              },
+              "speed": 1,
+              "reversed": false,
+              "disabled": false,
+              "projectItem": "v25_h264_aac.mp4",
+              "media": "v25_h264_aac.mp4"
+            }
+          ],
+          "transitions": [
+            {
+              "unreadable": true
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "name": "Video 2",
+          "muted": false,
+          "clips": [],
+          "transitions": []
+        },
+        {
+          "index": 2,
+          "name": "Video 3",
+          "muted": false,
+          "clips": [],
+          "transitions": []
+        }
+      ],
+      "audioTracks": [
+        {
+          "index": 0,
+          "name": "Audio 1",
+          "muted": false,
+          "clips": [
+            {
+              "name": "v25_h264_aac.mp4",
+              "start": {
+                "ticks": "0"
+              },
+              "end": {
+                "ticks": "812851200000"
+              },
+              "inPoint": {
+                "ticks": "0"
+              },
+              "outPoint": {
+                "ticks": "812851200000"
+              },
+              "speed": 1,
+              "reversed": false,
+              "disabled": false,
+              "projectItem": "v25_h264_aac.mp4",
+              "media": "v25_h264_aac.mp4"
+            },
+            {
+              "name": "v25_h264_aac.mp4",
+              "start": {
+                "ticks": "812851200000"
+              },
+              "end": {
+                "ticks": "1828915200000"
+              },
+              "inPoint": {
+                "ticks": "0"
+              },
+              "outPoint": {
+                "ticks": "1016064000000"
+              },
+              "speed": 1,
+              "reversed": false,
+              "disabled": false,
+              "projectItem": "v25_h264_aac.mp4",
+              "media": "v25_h264_aac.mp4"
+            }
+          ]
+        },
+        {
+          "index": 1,
+          "name": "Audio 2",
+          "muted": false,
+          "clips": []
+        },
+        {
+          "index": 2,
+          "name": "Audio 3",
+          "muted": false,
+          "clips": []
+        }
+      ],
+      "markers": []
+    }
+  ],
+  "bins": [
+    {
+      "name": "Main",
+      "type": "item",
+      "colorLabel": 5
+    },
+    {
+      "name": "v25_h264_aac.mp4",
+      "type": "item",
+      "colorLabel": 1
+    }
+  ]
+}

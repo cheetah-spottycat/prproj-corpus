@@ -76,8 +76,10 @@ def check_one(path: Path, personal: list[tuple[str, bytes]]) -> list[str]:
         try:
             data = json.loads(truth.read_text(encoding="utf-8-sig"))
             # A case may ask for no sequence (labels/index); then the readback has none either.
-            wanted = len(data.get("case", {}).get("sequences", []))
-            if len(data.get("sequences", [])) != wanted:
+            # A perturbed copy inherits its base case's sequences, so it isn't counted here.
+            case = data.get("case", {})
+            wanted = len(case.get("sequences", []))
+            if "perturbedFrom" not in case and len(data.get("sequences", [])) != wanted:
                 problems.append(f"truth has {len(data.get('sequences', []))} sequences, the case asked for {wanted}")
         except json.JSONDecodeError as e:
             problems.append(f"truth does not parse: {e}")

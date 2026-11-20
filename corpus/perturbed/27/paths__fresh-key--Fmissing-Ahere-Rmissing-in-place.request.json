@@ -1,0 +1,41 @@
+{
+  "generator": {
+    "name": "filmcraft-corpus/perturb.py"
+  },
+  "case": {
+    "id": "paths/fresh-key--Fmissing-Ahere-Rmissing-in-place",
+    "description": "paths/isolated again, with a FileKey new to Premiere in every copy. In paths/precedence and paths/isolated Premiere linked a copy no field pointed to whenever FilePath was missing, even after a restart, so it remembers media locations outside the project. With a fresh FileKey it has to go by the project's own fields.",
+    "perturbedFrom": {
+      "id": "basic/single-clip",
+      "premiere": {
+        "version": "27.0.0"
+      }
+    },
+    "variant": {
+      "FilePath": "missing",
+      "ActualMediaFilePath": "here",
+      "RelativePath": "missing",
+      "project": "in-place"
+    },
+    "changes": {
+      "FilePath": {
+        "mode": "missing",
+        "points to": "out/perturbed/void/missing-F/v25_h264_aac.mp4",
+        "exists": false
+      },
+      "ActualMediaFilePath": {
+        "mode": "here",
+        "points to": "out/perturbed/media/fresh-key/2-A/v25_h264_aac.mp4",
+        "exists": true
+      },
+      "RelativePath": {
+        "mode": "missing",
+        "points to": "out/perturbed/void/missing-R/v25_h264_aac.mp4",
+        "exists": false
+      },
+      "FileKey": "replaced with ea895787-32fc-59e2-bef1-c22ae6fb8a1e (uuid5 of the variant name, new to Premiere)",
+      "project location": "out/perturbed/27/paths__fresh-key--Fmissing-Ahere-Rmissing-in-place.prproj (its own)"
+    },
+    "projectSha256": "65e37827d6860e9ebceb0569ed6e4c716e7e9a971f3619aa2c6d8f900b9552e7"
+  }
+}

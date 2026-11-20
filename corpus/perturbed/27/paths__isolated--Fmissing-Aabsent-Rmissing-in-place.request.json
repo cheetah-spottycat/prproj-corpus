@@ -1,0 +1,40 @@
+{
+  "generator": {
+    "name": "filmcraft-corpus/perturb.py"
+  },
+  "case": {
+    "id": "paths/isolated--Fmissing-Aabsent-Rmissing-in-place",
+    "description": "paths/precedence again, with missing paths pointing into a folder tree that doesn't exist and the copies named so RelativePath's sorts first (1-R, 2-A, 3-F). paths/precedence linked ActualMediaFilePath's copy even when no field pointed to it; this tells a field Premiere follows from a file it finds by searching near the missing path.",
+    "perturbedFrom": {
+      "id": "basic/single-clip",
+      "premiere": {
+        "version": "27.0.0"
+      }
+    },
+    "variant": {
+      "FilePath": "missing",
+      "ActualMediaFilePath": "absent",
+      "RelativePath": "missing",
+      "project": "in-place"
+    },
+    "changes": {
+      "FilePath": {
+        "mode": "missing",
+        "points to": "out/perturbed/void/missing-F/v25_h264_aac.mp4",
+        "exists": false
+      },
+      "ActualMediaFilePath": {
+        "mode": "absent",
+        "points to": null,
+        "exists": false
+      },
+      "RelativePath": {
+        "mode": "missing",
+        "points to": "out/perturbed/void/missing-R/v25_h264_aac.mp4",
+        "exists": false
+      },
+      "project location": "out/perturbed/27/paths__isolated--Fmissing-Aabsent-Rmissing-in-place.prproj (its own)"
+    },
+    "projectSha256": "413c1f5bbbb4285484ba2547785533fac78a191c6502e3b70581cbc4f612b596"
+  }
+}

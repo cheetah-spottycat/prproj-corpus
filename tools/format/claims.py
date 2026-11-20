@@ -16,9 +16,9 @@ Usage:
 --self-test changes one fact at a time in copies of corpus projects (in memory) and checks that
 the claim about that fact then fails.
 
-    python tools/format/claims.py out/premiere/27 --doc docs/format/prproj.md
+    python tools/format/claims.py corpus/premiere/27 --doc docs/format/prproj.md
 
-OUT_FOLDER defaults to out/premiere/27. Exit status 1 if a claim or the doc check fails.
+OUT_FOLDER defaults to corpus/premiere/27. Exit status 1 if a claim or the doc check fails.
 Only for projects this corpus generated. MIT OR Apache-2.0.
 """
 
@@ -412,10 +412,12 @@ def _(p):
 # §5 Media
 
 
-@claim("media.relative-path")
+@claim("media.relative-path", cases=r"^(?!paths/relink$)")
 def _(p):
-    """Media/RelativePath, resolved from the project's folder, is the media file the readback names;
-    FilePath and ActualMediaFilePath end with the same file name."""
+    """Media/RelativePath is relative to the project's folder: resolved from it, it names
+    media/<file> in the corpus root (three levels up from out/premiere/<major>/ or
+    corpus/premiere/<major>/). FilePath and ActualMediaFilePath end with the same file name.
+    Computed, not looked up, so it holds on any machine."""
     problems, seen = [], 0
     for media in p.tops("Media"):
         rel = p.text(media, "RelativePath")
@@ -423,9 +425,9 @@ def _(p):
             continue
         seen += 1
         target = (p.path.parent / rel.replace("\\", "/")).resolve()
-        if not target.exists():
-            problems.append(f"RelativePath {rel} does not resolve")
         name = rel.replace("\\", "/").rsplit("/", 1)[-1]
+        if target != (p.path.parents[3] / "media" / name).resolve():
+            problems.append(f"RelativePath {rel} does not lead to media/{name}")
         for field in ("FilePath", "ActualMediaFilePath"):
             value = (p.text(media, field) or "").replace("\\", "/")
             if not value.endswith("/" + name):
@@ -922,11 +924,15 @@ def _(p):
     m = one_media(p)
     if m is None:
         return ["not exactly one Media for the clip"]
-    target = (p.path.parents[3] / "out" / "relinked" / "relink" / "v25_h264_aac.mp4").resolve()
+    # The copy sits in out/relinked/relink/ of the generating corpus folder. Absolute paths are
+    # checked by their tail (they name the generating machine's folder); RelativePath by where it
+    # leads from the project: ../../relinked/relink/ from <out or corpus>/premiere/<major>/.
+    tail = "\\out\\relinked\\relink\\v25_h264_aac.mp4"
     problems = [f"{f} {p.text(m, f)}" for f in ("FilePath", "ActualMediaFilePath")
-                if Path(p.text(m, f) or "").resolve() != target]
+                if not (p.text(m, f) or "").lower().endswith(tail)]
     rel = p.text(m, "RelativePath")
-    if rel is None or (p.path.parent / rel.replace("\\", "/")).resolve() != target:
+    expected = (p.path.parents[2] / "relinked" / "relink" / "v25_h264_aac.mp4").resolve()
+    if rel is None or (p.path.parent / rel.replace("\\", "/")).resolve() != expected:
         problems.append(f"RelativePath {rel}")
     links = [b.get("mediaPath") for b in readback_item(p)]
     if links != ["<corpus>/out/relinked/relink/v25_h264_aac.mp4"]:
@@ -1011,9 +1017,14 @@ def _(projects):
             problems.append(f"{name}: offline in {offline}")
         if not foreign:
             problems.append(f"{name}: every variant linked a file one of its fields named")
+        # On the generating machine the linked copy must exist; elsewhere (a published copy
+        # without out/) only its form can be checked.
         root = members[0].path.parents[3]
+        local = (root / "out" / "perturbed").exists()
         for f in files:
-            if not f or not f.startswith("<corpus>/") or not (root / f[len("<corpus>/"):]).exists():
+            if not f or not f.startswith("<corpus>/out/perturbed/media/"):
+                problems.append(f"{name}: linked {f}, not one of the perturbation's media copies")
+            elif local and not (root / f[len("<corpus>/"):]).exists():
                 problems.append(f"{name}: linked file {f} does not exist")
     return problems
 
@@ -1158,7 +1169,7 @@ def main(argv: list[str]) -> int:
         i = argv.index("--doc")
         doc = Path(argv[i + 1])
         args.remove(argv[i + 1])
-    out = Path(args[0]) if args else Path("out/premiere/27")
+    out = Path(args[0]) if args else Path("corpus/premiere/27")
     if "--self-test" in argv:
         return 0 if self_test(out) else 1
     files = sorted(out.glob("*.prproj"))

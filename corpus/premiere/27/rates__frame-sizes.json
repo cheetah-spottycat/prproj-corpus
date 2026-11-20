@@ -1,0 +1,291 @@
+{
+  "generator": {
+    "name": "filmcraft-corpus/premiere-projects",
+    "version": "0.1.0"
+  },
+  "premiere": {
+    "version": "27.0.0"
+  },
+  "case": {
+    "id": "rates/frame-sizes",
+    "description": "Sequences made from 1280x720, 3840x2160 and vertical 1080x1920 media, all 25 fps, so the sequence frame size follows the media.",
+    "media": [
+      "v25_h264_720p.mp4",
+      "v25_h264_uhd.mp4",
+      "v25_h264_vertical.mp4"
+    ],
+    "sequences": [
+      {
+        "name": "720p",
+        "fromMedia": "v25_h264_720p.mp4"
+      },
+      {
+        "name": "UHD",
+        "fromMedia": "v25_h264_uhd.mp4"
+      },
+      {
+        "name": "Vertical",
+        "fromMedia": "v25_h264_vertical.mp4"
+      }
+    ]
+  },
+  "sequences": [
+    {
+      "name": "720p",
+      "frameRate": 25,
+      "ticksPerFrame": 10160640000,
+      "width": 1280,
+      "height": 720,
+      "end": {
+        "ticks": "1016064000000"
+      },
+      "videoTracks": [
+        {
+          "index": 0,
+          "name": "Video 1",
+          "muted": false,
+          "clips": [
+            {
+              "name": "v25_h264_720p.mp4",
+              "start": {
+                "ticks": "0"
+              },
+              "end": {
+                "ticks": "1016064000000"
+              },
+              "inPoint": {
+                "ticks": "0"
+              },
+              "outPoint": {
+                "ticks": "1016064000000"
+              },
+              "speed": 1,
+              "reversed": false,
+              "disabled": false,
+              "projectItem": "v25_h264_720p.mp4",
+              "media": "v25_h264_720p.mp4"
+            }
+          ],
+          "transitions": []
+        },
+        {
+          "index": 1,
+          "name": "Video 2",
+          "muted": false,
+          "clips": [],
+          "transitions": []
+        },
+        {
+          "index": 2,
+          "name": "Video 3",
+          "muted": false,
+          "clips": [],
+          "transitions": []
+        }
+      ],
+      "audioTracks": [
+        {
+          "index": 0,
+          "name": "Audio 1",
+          "muted": false,
+          "clips": []
+        },
+        {
+          "index": 1,
+          "name": "Audio 2",
+          "muted": false,
+          "clips": []
+        },
+        {
+          "index": 2,
+          "name": "Audio 3",
+          "muted": false,
+          "clips": []
+        }
+      ],
+      "markers": []
+    },
+    {
+      "name": "UHD",
+      "frameRate": 25,
+      "ticksPerFrame": 10160640000,
+      "width": 3840,
+      "height": 2160,
+      "end": {
+        "ticks": "1016064000000"
+      },
+      "videoTracks": [
+        {
+          "index": 0,
+          "name": "Video 1",
+          "muted": false,
+          "clips": [
+            {
+              "name": "v25_h264_uhd.mp4",
+              "start": {
+                "ticks": "0"
+              },
+              "end": {
+                "ticks": "1016064000000"
+              },
+              "inPoint": {
+                "ticks": "0"
+              },
+              "outPoint": {
+                "ticks": "1016064000000"
+              },
+              "speed": 1,
+              "reversed": false,
+              "disabled": false,
+              "projectItem": "v25_h264_uhd.mp4",
+              "media": "v25_h264_uhd.mp4"
+            }
+          ],
+          "transitions": []
+        },
+        {
+          "index": 1,
+          "name": "Video 2",
+          "muted": false,
+          "clips": [],
+          "transitions": []
+        },
+        {
+          "index": 2,
+          "name": "Video 3",
+          "muted": false,
+          "clips": [],
+          "transitions": []
+        }
+      ],
+      "audioTracks": [
+        {
+          "index": 0,
+          "name": "Audio 1",
+          "muted": false,
+          "clips": []
+        },
+        {
+          "index": 1,
+          "name": "Audio 2",
+          "muted": false,
+          "clips": []
+        },
+        {
+          "index": 2,
+          "name": "Audio 3",
+          "muted": false,
+          "clips": []
+        }
+      ],
+      "markers": []
+    },
+    {
+      "name": "Vertical",
+      "frameRate": 25,
+      "ticksPerFrame": 10160640000,
+      "width": 1080,
+      "height": 1920,
+      "end": {
+        "ticks": "1016064000000"
+      },
+      "videoTracks": [
+        {
+          "index": 0,
+          "name": "Video 1",
+          "muted": false,
+          "clips": [
+            {
+              "name": "v25_h264_vertical.mp4",
+              "start": {
+                "ticks": "0"
+              },
+              "end": {
+                "ticks": "1016064000000"
+              },
+              "inPoint": {
+                "ticks": "0"
+              },
+              "outPoint": {
+                "ticks": "1016064000000"
+              },
+              "speed": 1,
+              "reversed": false,
+              "disabled": false,
+              "projectItem": "v25_h264_vertical.mp4",
+              "media": "v25_h264_vertical.mp4"
+            }
+          ],
+          "transitions": []
+        },
+        {
+          "index": 1,
+          "name": "Video 2",
+          "muted": false,
+          "clips": [],
+          "transitions": []
+        },
+        {
+          "index": 2,
+          "name": "Video 3",
+          "muted": false,
+          "clips": [],
+          "transitions": []
+        }
+      ],
+      "audioTracks": [
+        {
+          "index": 0,
+          "name": "Audio 1",
+          "muted": false,
+          "clips": []
+        },
+        {
+          "index": 1,
+          "name": "Audio 2",
+          "muted": false,
+          "clips": []
+        },
+        {
+          "index": 2,
+          "name": "Audio 3",
+          "muted": false,
+          "clips": []
+        }
+      ],
+      "markers": []
+    }
+  ],
+  "bins": [
+    {
+      "name": "720p",
+      "type": "item",
+      "colorLabel": 5
+    },
+    {
+      "name": "UHD",
+      "type": "item",
+      "colorLabel": 5
+    },
+    {
+      "name": "Vertical",
+      "type": "item",
+      "colorLabel": 5
+    },
+    {
+      "name": "v25_h264_720p.mp4",
+      "type": "item",
+      "colorLabel": 0
+    },
+    {
+      "name": "v25_h264_uhd.mp4",
+      "type": "item",
+      "colorLabel": 0
+    },
+    {
+      "name": "v25_h264_vertical.mp4",
+      "type": "item",
+      "colorLabel": 0
+    }
+  ]
+}
