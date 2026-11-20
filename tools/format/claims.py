@@ -25,6 +25,7 @@ Only for projects this corpus generated. MIT OR Apache-2.0.
 from __future__ import annotations
 
 import gzip
+import hashlib
 import json
 import os
 import re
@@ -62,6 +63,8 @@ class Project:
             if key in self.objects:
                 self.duplicate_keys.append(key)
             self.objects[key] = child
+        request_path = path.with_name(path.stem + ".request.json")
+        self.request = json.loads(request_path.read_text(encoding="utf-8")) if request_path.exists() else None
         truth_path = path.with_suffix(".json")
         self.truth = json.loads(truth_path.read_text(encoding="utf-8")) if truth_path.exists() else {}
         case = self.truth.get("case", {})
@@ -165,19 +168,24 @@ def t(value: dict | None) -> int:
 
 
 class Claim:
-    def __init__(self, id: str, cases: str, check: Callable[[Project], list[str] | None], doc: str):
+    def __init__(self, id: str, cases: str, check: Callable, doc: str, perturbed: bool, group: bool):
         self.id, self.cases, self.check, self.doc = id, re.compile(cases), check, doc
+        self.perturbed, self.group = perturbed, group
 
 
 CLAIMS: list[Claim] = []
 
 
-def claim(id: str, cases: str = ".*"):
+def claim(id: str, cases: str = ".*", perturbed: bool = False, group: bool = False):
     """Register a check. `cases` is a regex on the case id; the function returns a list of
-    problems, or None when the project turns out not to be evidence for the claim."""
+    problems, or None when the project turns out not to be evidence for the claim.
+
+    `perturbed` checks run on the perturbed copies (out/perturbed/<major>/) and their readback
+    instead of the generated projects. A `group` check gets all matching projects at once, for
+    claims about how variants compare."""
 
     def register(fn):
-        CLAIMS.append(Claim(id, cases, fn, (fn.__doc__ or "").strip()))
+        CLAIMS.append(Claim(id, cases, fn, (fn.__doc__ or "").strip(), perturbed, group))
         return fn
 
     return register
@@ -476,8 +484,9 @@ def _(p):
 
 @claim("media.cache-paths")
 def _(p):
-    """Every AudioStream stores ConformedAudioPath and PeakFilePath."""
-    streams = p.tops("AudioStream")
+    """The AudioStream of online media stores ConformedAudioPath and PeakFilePath (offline media
+    drops both: see paths.offline)."""
+    streams = [s for m in p.tops("Media") if p.one(m, "OfflineReason") is None for s in p.q(m, "AudioStream>")]
     if not streams:
         return None
     return [f"AudioStream lacks {f}" for s in streams for f in ("ConformedAudioPath", "PeakFilePath") if p.one(s, f) is None]
@@ -894,26 +903,141 @@ def _(p):
     return problems if seen else ["no relabelled clip in a sequence"]
 
 
+# §5 Media paths: what Premiere writes on relink and offline, and what it follows on open
+
+
+def one_media(p: Project, title: str = "v25_h264_aac.mp4") -> ET.Element | None:
+    media = [m for m in p.tops("Media") if p.text(m, "Title") == title]
+    return media[0] if len(media) == 1 else None
+
+
+def readback_item(p: Project, title: str = "v25_h264_aac.mp4") -> list[dict]:
+    return [b for b in p.truth.get("bins", []) if b["name"] == title]
+
+
+@claim("paths.relink-rewrites-all", cases=r"^paths/relink$")
+def _(p):
+    """Relinking through the API (changeMediaFilePath) rewrites FilePath, ActualMediaFilePath and
+    RelativePath together, to the new file; the readback links the new file."""
+    m = one_media(p)
+    if m is None:
+        return ["not exactly one Media for the clip"]
+    target = (p.path.parents[3] / "out" / "relinked" / "relink" / "v25_h264_aac.mp4").resolve()
+    problems = [f"{f} {p.text(m, f)}" for f in ("FilePath", "ActualMediaFilePath")
+                if Path(p.text(m, f) or "").resolve() != target]
+    rel = p.text(m, "RelativePath")
+    if rel is None or (p.path.parent / rel.replace("\\", "/")).resolve() != target:
+        problems.append(f"RelativePath {rel}")
+    links = [b.get("mediaPath") for b in readback_item(p)]
+    if links != ["<corpus>/out/relinked/relink/v25_h264_aac.mp4"]:
+        problems.append(f"readback links {links}")
+    return problems
+
+
+@claim("paths.offline", cases=r"^paths/offline$")
+def _(p):
+    """Offline media keeps FilePath and ActualMediaFilePath, loses RelativePath (and its
+    AudioStream's ConformedAudioPath and PeakFilePath) and gains OfflineReason (5 when set
+    through the API); the readback reports it offline."""
+    m = one_media(p)
+    if m is None:
+        return ["not exactly one Media for the clip"]
+    problems = [f"lacks {f}" for f in ("FilePath", "ActualMediaFilePath") if p.one(m, f) is None]
+    if p.one(m, "RelativePath") is not None:
+        problems.append("RelativePath still present")
+    stream = p.one(m, "AudioStream>")
+    problems += [f"AudioStream keeps {f}" for f in ("ConformedAudioPath", "PeakFilePath") if p.one(stream, f) is not None]
+    if p.text(m, "OfflineReason") != "5":
+        problems.append(f"OfflineReason {p.text(m, 'OfflineReason')}")
+    if [b.get("offline") for b in readback_item(p)] != [True]:
+        problems.append("readback not offline")
+    return problems
+
+
+def linked(p: Project) -> set:
+    """Every file the readback says the clip is linked to (project item and timeline clips)."""
+    found = {b.get("mediaPath") for b in readback_item(p)}
+    found |= {c.get("media") for s in p.truth.get("sequences", [])
+              for tr in s["videoTracks"] + s["audioTracks"] for c in tr["clips"]}
+    return found
+
+
+def field_target(p: Project, field: str) -> str | None:
+    change = p.case.get("changes", {}).get(field, {})
+    return f"<corpus>/{change['points to']}" if change.get("points to") else None
+
+
+@claim("paths.perturbed-unsaved", cases=r"^paths/", perturbed=True)
+def _(p):
+    """Premiere opened each perturbed copy without saving over it: the file still has the hash
+    perturb.py recorded."""
+    expected = (p.request or {}).get("case", {}).get("projectSha256")
+    if expected is None:
+        return ["no projectSha256 in the request (rerun perturb.py)"]
+    return [] if hashlib.sha256(p.path.read_bytes()).hexdigest() == expected else ["changed after perturb.py wrote it"]
+
+
+@claim("paths.filepath-wins", cases=r"^paths/", perturbed=True)
+def _(p):
+    """When FilePath names an existing file, Premiere links that file, whatever
+    ActualMediaFilePath and RelativePath say and whether the project looks moved."""
+    if p.case["variant"]["FilePath"] != "here":
+        return None
+    want, got = field_target(p, "FilePath"), linked(p)
+    return [] if got == {want} else [f"linked {sorted(map(str, got))}, FilePath {want}"]
+
+
+@claim("paths.fallback-not-from-fields", cases=r"^paths/", perturbed=True, group=True)
+def _(projects):
+    """With FilePath missing, every variant of a set linked the same existing file whatever
+    ActualMediaFilePath and RelativePath said, none went offline, and in each set at least one
+    variant linked a file none of its own fields named: the fallback comes from state outside
+    the project file."""
+    sets: dict[str, list[Project]] = {}
+    for p in projects:
+        if p.case["variant"]["FilePath"] == "missing":
+            sets.setdefault(p.id.split("--")[0], []).append(p)
+    if not sets:
+        return None
+    problems = []
+    for name, members in sorted(sets.items()):
+        files = set().union(*(linked(p) for p in members))
+        offline = [p.id for p in members if any(b.get("offline") for b in readback_item(p))]
+        foreign = [p.id for p in members
+                   if not linked(p) & {field_target(p, f) for f in ("ActualMediaFilePath", "RelativePath")}]
+        if len(files) != 1:
+            problems.append(f"{name}: variants linked {sorted(map(str, files))}")
+        if offline:
+            problems.append(f"{name}: offline in {offline}")
+        if not foreign:
+            problems.append(f"{name}: every variant linked a file one of its fields named")
+        root = members[0].path.parents[3]
+        for f in files:
+            if not f or not f.startswith("<corpus>/") or not (root / f[len("<corpus>/"):]).exists():
+                problems.append(f"{name}: linked file {f} does not exist")
+    return problems
+
+
 # ------------------------------------------------------------------ running
 
 
-def run(projects: list[Project], verbose: bool) -> tuple[bool, dict[str, str]]:
+def run(projects: list[Project], perturbed: list[Project], verbose: bool) -> tuple[bool, dict[str, str]]:
     ok_all = True
     results = {}
     for c in CLAIMS:
         applied, failed = 0, []
-        for p in projects:
-            if not c.cases.search(p.id):
-                continue
+        pool = [p for p in (perturbed if c.perturbed else projects) if c.cases.search(p.id)]
+        units = [("group", pool)] if c.group and pool else [(p.id, p) for p in pool]
+        for pid, unit in units:
             try:
-                problems = c.check(p)
+                problems = c.check(unit)
             except Exception as e:  # a claim that can't be checked is a failure, not a crash
                 problems = [f"check raised {type(e).__name__}: {e}"]
             if problems is None:
                 continue
             applied += 1
             if problems:
-                failed.append((p.id, problems))
+                failed.append((pid, problems))
         if applied == 0:
             status = "NO EVIDENCE"
         elif failed:
@@ -922,7 +1046,8 @@ def run(projects: list[Project], verbose: bool) -> tuple[bool, dict[str, str]]:
             status = "ok"
         ok_all &= status == "ok"
         results[c.id] = status
-        print(f"{status:<11} {c.id:<36} {applied - len(failed)}/{applied} projects")
+        what = f"{len(pool)} projects as a group" if c.group else f"{applied - len(failed)}/{applied} projects"
+        print(f"{status:<11} {c.id:<36} {what}{' (perturbed)' if c.perturbed else ''}")
         for pid, problems in failed if (failed and (verbose or status == "FAIL")) else []:
             for problem in problems[:3]:
                 print(f"            {pid}: {problem}")
@@ -983,6 +1108,10 @@ MUTATIONS = [
      lambda x: x.replace("<asl.clip.label.color>6769408<", "<asl.clip.label.color>480554<", 1)),
     ("labels__index--9", "label 9 stored as 8 on a master clip", "labels.stored-index",
      lambda x: x.replace("<asl.clip.label.name>BE.Prefs.LabelColors.9<", "<asl.clip.label.name>BE.Prefs.LabelColors.8<", 1)),
+    ("paths__relink", "relinked FilePath left elsewhere", "paths.relink-rewrites-all",
+     lambda x: re.sub(r"<FilePath>[^<]*relinked[^<]*</FilePath>", r"<FilePath>H:\\elsewhere\\v25_h264_aac.mp4</FilePath>", x, count=1)),
+    ("paths__offline", "OfflineReason removed", "paths.offline",
+     lambda x: re.sub(r"\s*<OfflineReason>5</OfflineReason>", "", x, count=1)),
     ("basic__two-clips-gap", "list Index renumbered", "objects.list-index",
      lambda x: x.replace('<TrackItem Index="1" ObjectRef=', '<TrackItem Index="2" ObjectRef=', 1)),
 ]
@@ -1006,7 +1135,7 @@ def self_test(out: Path) -> bool:
         original, mutant = Project(path), Project(path, gzip.compress(changed.encode("utf-8")))
         caught = []
         for c in CLAIMS:
-            if not c.cases.search(mutant.id):
+            if c.perturbed or c.group or not c.cases.search(mutant.id):
                 continue
             before = c.check(original)
             try:
@@ -1038,9 +1167,13 @@ def main(argv: list[str]) -> int:
     if not projects:
         print(f"no projects in {out}")
         return 1
-    versions = sorted({str(p.truth.get("premiere", {}).get("version")) for p in projects})
-    print(f"{len(projects)} projects in {out} (Premiere {', '.join(versions)}), {len(CLAIMS)} claims\n")
-    ok, _ = run(projects, verbose)
+    # Perturbed copies live next to the generated projects: out/perturbed/<major>/ for out/premiere/<major>/.
+    perturbed_dir = out.parent.parent / "perturbed" / out.name
+    perturbed = [Project(f) for f in sorted(perturbed_dir.glob("*.prproj")) if f.with_suffix(".json").exists()]
+    versions = sorted({str(p.truth.get("premiere", {}).get("version")) for p in projects + perturbed})
+    print(f"{len(projects)} projects in {out}, {len(perturbed)} perturbed in {perturbed_dir} "
+          f"(Premiere {', '.join(versions)}), {len(CLAIMS)} claims\n")
+    ok, _ = run(projects, perturbed, verbose)
     if doc is not None:
         print()
         doc_ok = check_doc(doc)

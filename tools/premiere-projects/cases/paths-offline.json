@@ -1,0 +1,7 @@
+{
+  "id": "paths/offline",
+  "description": "The media is made offline through the API after a sequence is made from it; shows how offline media is stored.",
+  "media": ["v25_h264_aac.mp4"],
+  "sequences": [{ "name": "Main", "fromMedia": "v25_h264_aac.mp4" }],
+  "ops": [{ "op": "offline", "media": "v25_h264_aac.mp4" }]
+}

@@ -1,0 +1,17 @@
+{
+  "id": "paths/precedence",
+  "description": "Which of FilePath, ActualMediaFilePath and RelativePath Premiere follows on open when they disagree. Each path points to its own identical copy of the media (here), to a file that doesn't exist (missing), or is removed (absent). The project either records its own location (in-place) or still records the base project's (moved).",
+  "base": "basic/single-clip",
+  "media": "v25_h264_aac.mp4",
+  "grid": {
+    "FilePath": ["here", "missing"],
+    "ActualMediaFilePath": ["here", "missing"],
+    "RelativePath": ["here", "missing"],
+    "project": ["in-place", "moved"]
+  },
+  "extra": [
+    { "FilePath": "missing", "ActualMediaFilePath": "absent", "RelativePath": "here", "project": "in-place" },
+    { "FilePath": "here", "ActualMediaFilePath": "absent", "RelativePath": "missing", "project": "in-place" },
+    { "FilePath": "missing", "ActualMediaFilePath": "here", "RelativePath": "absent", "project": "in-place" }
+  ]
+}

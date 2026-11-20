@@ -45,6 +45,12 @@ clip's end by one tick, a removed `IsMuted`, a renamed `MZ.TrackName`…) and ex
 about that fact to fail. So *confirmed* here means "a check that can fail passed on Premiere's
 output", and anyone with Premiere can repeat it.
 
+Most claims are about what Premiere *writes*. A few are about what it *reads*, such as which
+media path it follows. Those come from **perturbed** copies: generated projects with named
+fields changed by `tools/premiere-projects/perturb.py`, opened (never saved) by the plugin, with
+Premiere's readback next to each. The checker reads them from `out/perturbed/<major>/`, and
+`paths.perturbed-unsaved` confirms by hash that Premiere didn't save over any of them.
+
 ## Importers cited
 
 | PR | Commit | Lineage |
@@ -124,11 +130,15 @@ Media ─ FilePath, ActualMediaFilePath, RelativePath, Title
 | Claim | Status | Evidence |
 |---|---|---|
 | `Media` holds `FilePath` and `ActualMediaFilePath` (absolute) and `RelativePath`, relative to the folder holding the project file (`..\..\..\media\v25_h264_aac.mp4` for a project in `out/premiere/27/`), with Windows separators on Windows. | confirmed | every corpus project [claim: media.relative-path] |
-| Which path wins: #1694 `FilePath` › `ActualMediaFilePath`, keeping `RelativePath` as an alternative; #3428 `ActualMediaFilePath` › `FilePath` › `RelativePath`; #4504 `ActualMediaFilePath` › `FilePath`, falling back to `RelativePath` when the absolute path is foreign or missing. | **conflict, open** | In every corpus file the two absolute paths are equal. Needs a case where they differ (moved or relinked media). |
+| Which path the importers try first: #1694 `FilePath` › `ActualMediaFilePath`, keeping `RelativePath` as an alternative; #3428 `ActualMediaFilePath` › `FilePath` › `RelativePath`; #4504 `ActualMediaFilePath` › `FilePath`, falling back to `RelativePath` when the absolute path is foreign or missing. | **conflict, partly settled: `FilePath` first** | see the next two rows [claim: paths.filepath-wins] |
+| **When `FilePath` names an existing file, Premiere links that file**, whatever `ActualMediaFilePath` and `RelativePath` say (an existing copy, a missing file, or removed), and whether or not the project records a different location for itself (moved). So #1694's order matches Premiere; #3428 and #4504 can open a different file than Premiere would when both absolute paths exist. | confirmed on open (17 perturbed variants, three folder layouts, original and fresh `FileKey`) | `paths/precedence`, `paths/isolated`, `paths/fresh-key` [claim: paths.filepath-wins] [claim: paths.perturbed-unsaved] |
+| **When `FilePath` is missing, the project file doesn't decide.** In 24 perturbed variants Premiere linked a copy of the same media it had seen earlier (in that session or before a restart), the same one for every variant of a set. It ignored an `ActualMediaFilePath` that named a different existing copy, never followed `RelativePath`, didn't pick the alphabetically first copy, and never left the media offline, even with all three paths broken or with a `FileKey` it had never seen. So it finds media through state outside the project, probably by file identity. What it does with `ActualMediaFilePath` and `RelativePath` on a machine that has never seen the file is **open**: that needs copies with unique content per variant. An importer can't reproduce machine state, so trying `ActualMediaFilePath`, then `RelativePath` resolved against the project folder, after `FilePath`, is a reasonable choice, not a copy of Premiere. | observed (state-dependent); fallback order **open** | as above [claim: paths.fallback-not-from-fields] |
+| Premiere itself keeps the paths consistent: relinking through the API rewrites `FilePath`, `ActualMediaFilePath` and `RelativePath` together (and drops `CCFileModTime`; the `FileKey` changes). | confirmed (API relink) | `paths/relink` [claim: paths.relink-rewrites-all] |
+| Offline media keeps `FilePath` and `ActualMediaFilePath`, loses `RelativePath` and its audio stream's cache paths, and gains `OfflineReason` (5 when set through the API). An importer should treat a `Media` with `OfflineReason` as offline even if a file exists at its path. | confirmed (API offline; other reasons not seen) | `paths/offline` [claim: paths.offline] |
 | `VideoStream/FrameRect` is `left,top,right,bottom` (`0,0,1920,1080`). `Duration` is in ticks. | confirmed; all importers | `rates/frame-sizes` (1280×720, 3840×2160, 1080×1920) [claim: media.frame-rect] |
 | A still has `IsStill=true` and a placeholder `Duration` of 10,973,491,200,000,000 ticks (12 hours). #1694 drops the duration for stills; #3428 keeps it. | confirmed | `basic/multitrack` (`still_1920x1080.png`) [claim: media.still] |
 | `AudioStream/AudioChannelLayout` is JSON, one entry per channel (`[{"channellabel":100},{"channellabel":101}]` for stereo). Importers count the entries. | confirmed (stereo) | every case with stereo audio [claim: media.channel-layout] |
-| `AudioStream` also stores `ConformedAudioPath` and `PeakFilePath`: absolute paths into the media cache, which by default is under the user profile. Anyone sharing projects must move the cache first (see the corpus README). | confirmed | every case with audio [claim: media.cache-paths] |
+| `AudioStream` also stores `ConformedAudioPath` and `PeakFilePath`: absolute paths into the media cache, which by default is under the user profile. Anyone sharing projects must move the cache first (see the corpus README). Offline media has neither. | confirmed | every case with audio [claim: media.cache-paths] |
 
 ## 6. Sequences
 
@@ -259,7 +269,7 @@ transition mapping and #1694's fader and transition mapping go by name.
 
 Each settles an open entry above:
 
-- moved or relinked media, so `FilePath` and `ActualMediaFilePath` differ (path precedence). The API offers `ClipProjectItem.changeMediaFilePath` and `createSetOfflineAction`, so this can be generated;
+- the fallback when `FilePath` is missing, on files Premiere has never seen: a perturbation with unique media content per variant (and ideally a cleared media cache), so nothing outside the project can match;
 - a muted track, video and audio, through the API's `Track.setMute` (track switches). The API has no lock action, so a locked track needs a manual step;
 - a weblink and a cue-point marker, a marker on a clip (marker types and owners);
 - whether relabelling by hand in the Project panel updates `asl.clip.label.color` (the API does not);

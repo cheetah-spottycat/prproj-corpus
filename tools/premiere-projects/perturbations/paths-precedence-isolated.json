@@ -1,0 +1,22 @@
+{
+  "id": "paths/isolated",
+  "description": "paths/precedence again, with missing paths pointing into a folder tree that doesn't exist and the copies named so RelativePath's sorts first (1-R, 2-A, 3-F). paths/precedence linked ActualMediaFilePath's copy even when no field pointed to it; this tells a field Premiere follows from a file it finds by searching near the missing path.",
+  "base": "basic/single-clip",
+  "media": "v25_h264_aac.mp4",
+  "layout": {
+    "media": "isolated",
+    "copies": { "FilePath": "3-F", "ActualMediaFilePath": "2-A", "RelativePath": "1-R" },
+    "missing": "void"
+  },
+  "grid": {
+    "FilePath": ["here", "missing"],
+    "ActualMediaFilePath": ["here", "missing"],
+    "RelativePath": ["here", "missing"],
+    "project": ["in-place"]
+  },
+  "extra": [
+    { "FilePath": "missing", "ActualMediaFilePath": "absent", "RelativePath": "here", "project": "in-place" },
+    { "FilePath": "missing", "ActualMediaFilePath": "absent", "RelativePath": "missing", "project": "in-place" },
+    { "FilePath": "missing", "ActualMediaFilePath": "missing", "RelativePath": "here", "project": "moved" }
+  ]
+}

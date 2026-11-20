@@ -15,11 +15,14 @@ tools/premiere-projects/
   plugin/        UXP plugin that builds, saves, reopens and reads back each case
   cases/         case definitions, as data (see "Cases" below)
   check.py       privacy and truth checks on generated projects
+  perturb.py     edited copies of generated projects, to see what Premiere does on open
+  perturbations/ perturbation definitions, as data (see "Perturbed projects" below)
 tools/format/    claims.py (checks docs/format/ against the corpus), walk.py (inspect a project),
                  inventory.py (names each importer reads)
 docs/format/     what is known about the .prproj format, claim by claim
 media/           generated synthetic media (not committed until the size budget is settled)
 out/premiere/<major>/<area>__<case>.prproj + .json   local runs (gitignored)
+out/perturbed/<major>/…   perturbed copies and their readback (gitignored)
 premiere/<major>/…   published projects (later)
 ```
 
@@ -30,6 +33,10 @@ premiere/<major>/…   published projects (later)
   application is read. No Adobe sample media, presets, LUTs, templates, MOGRTs or fonts.
 - **No personal details.** Saved projects must not contain user names, host names or home paths.
   Saved files are never edited afterwards; if a field leaks, change the case or the run setup.
+- **Perturbed copies are labelled as such.** The one exception to "never edited" is
+  `perturb.py`: it writes *copies* of generated projects with named fields changed, kept apart in
+  `out/perturbed/`, each with a request file that lists every change. Premiere opens them but
+  never saves them. They answer what Premiere does with what it reads, never what it writes.
 - **Media comes from ffmpeg only**, as a fixture generator. It is never linked or shipped.
 
 ## Truth JSON
@@ -94,7 +101,7 @@ Needs Premiere Pro 25.6 or later and Adobe's **UXP Developer Tool** (from the Cr
    Each case gets a new project in `out/premiere/<major>/`, is saved, closed, reopened, read back and
    closed again. Premiere doesn't redraw the panel during a run (about a minute for all cases), so
    it shows the result, and the log with `ok` or `FAIL <reason>` per case, only at the end. The log
-   is also written to `out/last-run.log`.
+   is also written to `out/last-run.log` (Open perturbed: `out/last-open-perturbed.log`).
 4. `python tools/premiere-projects/check.py` before sharing anything, and
    `python tools/format/claims.py out/premiere/<major> --doc docs/format/prproj.md` to check the
    format notes against what you generated.
@@ -129,13 +136,33 @@ One JSON file per case in `tools/premiere-projects/cases/`, read as data:
 
 Times are `{"frames": n}` at the sequence rate or `{"ticks": "…"}`. Operations: `overwrite`,
 `insert`, `trim` (moving the in point also moves the clip's start), `move` (`to` an absolute start
-or `by` an offset; Premiere's action itself only shifts), `disable`, `rename`, `trackName`, `marker`, `bin`, `label`,
+or `by` an offset; Premiere's action itself only shifts), `disable`, `rename`, `trackName`, `marker`, `bin`, `label`, `relink`, `offline`,
 `transition` (video only: `end` "start" or "end", `match` a regex that must pick exactly one of
 Premiere's video transition match names, optional `duration`, `singleSided`, `alignment`). An op works on
 `sequences[op.sequence || 0]`. A case may have no sequences. `vary` makes one project per value.
 `probe` logs the API's member names for tracks, track items and project items; cases under
 `probe/` are diagnostics, not corpus, and `claims.py` skips them. The case is copied into the
 truth JSON as `case`, so the request and Premiere's readback can be compared.
+
+`relink` copies the media file into `out/relinked/<into>/` and relinks the item to the copy
+(the API's `changeMediaFilePath`); `offline` makes the item offline.
+
+## Perturbed projects
+
+Some questions are about what Premiere *reads*: which of `FilePath`, `ActualMediaFilePath` and
+`RelativePath` wins when they disagree, for example. No project Premiere saves can show that,
+because it writes them consistently. So:
+
+1. Generate the base cases as usual (Run).
+2. `python tools/premiere-projects/perturb.py` writes the variants each definition in
+   `tools/premiere-projects/perturbations/` asks for: an edited copy, a `.request.json` with
+   every change, and identical media copies in `out/perturbed/media/`.
+3. In the panel, **Open perturbed** (the case filter applies). Each copy is opened, read back and
+   closed without saving; the readback, including the file each item is linked to
+   (`bins[].mediaPath`, paths in the corpus shown as `<corpus>/…`) and whether it is offline,
+   goes to `<stem>.json` next to it. The log notes which open dialogs the API lets the plugin
+   suppress. If Premiere still asks where media is, answer the dialog (Offline All); variants
+   with no reachable media run last.
 
 Not reachable through UXP yet: setting clip speed and time remapping (speed can only be read).
 Those need the FilmCraft round-trip route (FCP7 XML / OTIO imported into Premiere). Audio

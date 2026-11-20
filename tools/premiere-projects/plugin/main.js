@@ -122,15 +122,28 @@ document.getElementById("choose").addEventListener("click", async () => {
 
 restoreCorpusRoot();
 
-document.getElementById("run").addEventListener("click", async () => {
+document.getElementById("run").addEventListener("click", () =>
+  runTask((pattern) => runAll(pattern), "out/premiere/", "last-run.log",
+    "No case in tools/premiere-projects/cases/ matches the filter. Perturbed copies (out/perturbed/) are opened with Open perturbed."));
+document.getElementById("open-perturbed").addEventListener("click", () =>
+  runTask((pattern) => openPerturbed(pattern), "out/perturbed/", "last-open-perturbed.log",
+    "No perturbed copy in out/perturbed/ matches the filter. Make them with python tools/premiere-projects/perturb.py; generated cases run with Run."));
+
+// Runs one batch (Run or Open perturbed) with the filter, status box and log file around it.
+// Each button keeps its own log file, so one doesn't overwrite the other's.
+async function runTask(work, outLabel, logName, nothingMessage) {
   if (!corpusRoot) {
     log("Choose the corpus folder first (the folder that holds tools/ and media/).");
     return;
   }
-  if (running) return;
+  if (running) {
+    // The panel isn't redrawn during a run, so a click can arrive while one is still going.
+    log("note: a run is still going; click again when the status shows it has finished");
+    return;
+  }
   running = true;
-  const runButton = document.getElementById("run");
-  runButton.setAttribute("disabled", "");
+  const buttons = ["run", "open-perturbed"].map((id) => document.getElementById(id));
+  for (const b of buttons) b.setAttribute("disabled", "");
   const pattern = document.getElementById("filter").value || "";
   logLines.length = 0;
   document.getElementById("log").textContent = "";
@@ -140,11 +153,11 @@ document.getElementById("run").addEventListener("click", async () => {
   setStatus("running", "Running…", "The panel updates when the run is done.", 0);
   const restoreWorkspacePref = keepWorkspaceDuringRun();
   try {
-    const { ok, total, failed } = await runAll(pattern);
+    const { ok, total, failed } = await work(pattern);
     if (total === 0) {
-      setStatus("done-fail", "Nothing to run", "No case id matches the filter.", 0);
+      setStatus("done-fail", "Nothing to run", nothingMessage, 0);
     } else if (failed.length === 0) {
-      setStatus("done-ok", `Finished: ${ok}/${total} ok`, `Took ${elapsed(started)}. Output in out/premiere/.`, 1);
+      setStatus("done-ok", `Finished: ${ok}/${total} ok`, `Took ${elapsed(started)}. Output in ${outLabel}.`, 1);
     } else {
       setStatus("done-fail", `Finished: ${failed.length} of ${total} failed`, `Failed: ${failed.join(", ")} (${elapsed(started)})`, 1);
     }
@@ -154,16 +167,16 @@ document.getElementById("run").addEventListener("click", async () => {
   } finally {
     restoreWorkspacePref();
     running = false;
-    runButton.removeAttribute("disabled");
+    for (const b of buttons) b.removeAttribute("disabled");
   }
   // Keep a copy of the log next to the output so it can be read outside Premiere.
   try {
     const outFolder = await subfolder(corpusRoot, ["out"], true);
-    await writeText(outFolder, "last-run.log", logLines.join("\n") + "\n");
+    await writeText(outFolder, logName, logLines.join("\n") + "\n");
   } catch (e) {
-    log(`could not write out/last-run.log: ${e}`);
+    log(`could not write out/${logName}: ${e}`);
   }
-});
+}
 
 // ---------------------------------------------------------------- file helpers
 
@@ -393,6 +406,21 @@ const OPS = {
     const item = await mediaItem(ctx.project, op.media);
     transact(ctx.project, "label", () => [item.createSetColorLabelAction(op.color)]);
   },
+  // Relinks the media to an identical copy of its file in out/relinked/<into>/ (copied by the
+  // plugin), through the API's changeMediaFilePath: shows what relinking writes.
+  async relink(ctx, op) {
+    const item = ppro.ClipProjectItem.cast(await mediaItem(ctx.project, op.media));
+    if (!(await item.canChangeMediaPath())) throw new Error(`relink: Premiere says ${op.media} can't change its media path`);
+    if (typeof op.into !== "string" || !/^[A-Za-z0-9_-]+$/.test(op.into)) throw new Error('relink needs "into", a plain folder name');
+    const source = await (await subfolder(corpusRoot, MEDIA_DIR, false)).getEntry(op.media);
+    const dest = await subfolder(corpusRoot, ["out", "relinked", op.into], true);
+    const copy = await source.copyTo(dest, { overwrite: true });
+    if (!(await item.changeMediaFilePath(copy.nativePath, false))) throw new Error("relink: changeMediaFilePath returned false");
+  },
+  async offline(ctx, op) {
+    const item = ppro.ClipProjectItem.cast(await mediaItem(ctx.project, op.media));
+    transact(ctx.project, "offline", () => [item.createSetOfflineAction()]);
+  },
   // Diagnostic: logs the member names the public API offers on tracks, a clip track item, a
   // project item and the sequence, and the module's exports, so cases are written for what the
   // API can actually do. Changes nothing.
@@ -456,6 +484,23 @@ async function transitionMatchName(pattern) {
 
 // ---------------------------------------------------------------- readback
 
+// A media path as written to truth JSON: relative to media/ (as before) for the corpus media,
+// `<corpus>/…` for files elsewhere in the corpus folder (copies made for relinking and
+// perturbation), so truth never holds the machine's absolute corpus path.
+function shownPath(path, mediaRoot) {
+  if (!path) return path;
+  const under = (root) => {
+    if (!root) return false;
+    const p = path.toLowerCase();
+    const r = root.toLowerCase();
+    return p.startsWith(r + "\\") || p.startsWith(r + "/");
+  };
+  if (under(mediaRoot)) return path.slice(mediaRoot.length).replace(/^[\\/]+/, "");
+  const corpus = corpusRoot ? corpusRoot.nativePath.replace(/[\\/]+$/, "") : null;
+  if (corpus && under(corpus)) return "<corpus>/" + path.slice(corpus.length).replace(/^[\\/]+/, "").replace(/\\/g, "/");
+  return path;
+}
+
 async function readClips(track, mediaRoot) {
   const out = [];
   const items = await track.getTrackItems(ppro.Constants.TrackItemType.CLIP, false);
@@ -463,8 +508,7 @@ async function readClips(track, mediaRoot) {
     const projectItem = await item.getProjectItem();
     let media = null;
     try {
-      const path = await ppro.ClipProjectItem.cast(projectItem).getMediaFilePath();
-      media = path && path.startsWith(mediaRoot) ? path.slice(mediaRoot.length).replace(/^[\\/]+/, "") : path;
+      media = shownPath(await ppro.ClipProjectItem.cast(projectItem).getMediaFilePath(), mediaRoot);
     } catch (_) {
       media = null;
     }
@@ -549,7 +593,7 @@ async function readSequence(sequence, mediaRoot) {
   };
 }
 
-async function readBin(folder) {
+async function readBin(folder, mediaRoot) {
   const out = [];
   for (const item of await folder.getItems()) {
     const isBin = item.type === ppro.Constants.ProjectItemType.BIN;
@@ -561,7 +605,20 @@ async function readBin(folder) {
       colorLabel = null;
     }
     const entry = { name: item.name, type: isBin ? "bin" : "item", colorLabel };
-    if (isBin) entry.children = await readBin(ppro.FolderItem.cast(item));
+    if (isBin) {
+      entry.children = await readBin(ppro.FolderItem.cast(item), mediaRoot);
+    } else {
+      // Which file the item is linked to, and whether it is offline (what path precedence is about).
+      try {
+        const clip = ppro.ClipProjectItem.cast(item);
+        if (!(await clip.isSequence())) {
+          entry.mediaPath = shownPath(await clip.getMediaFilePath(), mediaRoot);
+          entry.offline = Boolean(await clip.isOffline());
+        }
+      } catch (e) {
+        entry.mediaError = String(e && e.message ? e.message : e);
+      }
+    }
     out.push(entry);
   }
   out.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
@@ -572,7 +629,7 @@ async function readProject(project, mediaRoot) {
   const sequences = [];
   for (const sequence of await project.getSequences()) sequences.push(await readSequence(sequence, mediaRoot));
   sequences.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
-  return { sequences, bins: await readBin(await project.getRootItem()) };
+  return { sequences, bins: await readBin(await project.getRootItem(), mediaRoot) };
 }
 
 // ---------------------------------------------------------------- one case
@@ -688,4 +745,79 @@ async function runAll(pattern) {
   }
   log(`done: ${ok}/${cases.length} ok`);
   return { ok, total: cases.length, failed };
+}
+
+// ---------------------------------------------------------------- perturbed projects
+
+// Options for opening an edited copy: no recent-files entry, and no dialogs where this Premiere
+// lets the API turn them off (a "where is this media?" dialog would stop the run until answered).
+function perturbedOpenOptions() {
+  let options = new ppro.OpenProjectOptions().setAddToMRUList(false);
+  const applied = [];
+  const missing = [];
+  for (const name of ["setShowLocateFileDialog", "setShowWarningDialog", "setShowConvertProjectDialog"]) {
+    if (typeof options[name] === "function") {
+      options = options[name](false) || options;
+      applied.push(name);
+    } else {
+      missing.push(name);
+    }
+  }
+  log(`note: open options: ${applied.join(", ") || "none"} set to false${missing.length ? `; not offered: ${missing.join(", ")}` : ""}`);
+  log(`note: OpenProjectOptions offers: ${memberNames(options).join(", ")}`);
+  return options;
+}
+
+// Opens each copy made by tools/premiere-projects/perturb.py, reads it back and closes it without
+// saving. The copy is never written by Premiere; its <stem>.json records the request and readback.
+async function openPerturbed(pattern) {
+  const major = String(uxp.host.version).split(".")[0];
+  let folder;
+  try {
+    folder = await subfolder(corpusRoot, ["out", "perturbed", major], false);
+  } catch (_) {
+    throw new Error(`no out/perturbed/${major}/: run python tools/premiere-projects/perturb.py first`);
+  }
+  const mediaRoot = (await subfolder(corpusRoot, MEDIA_DIR, false)).nativePath.replace(/[\/]+$/, "");
+  const re = new RegExp(pattern);
+  const requests = [];
+  for (const entry of await folder.getEntries()) {
+    if (!entry.isFile || !entry.name.endsWith(".request.json")) continue;
+    const request = JSON.parse(await entry.read());
+    if (re.test(request.case.id)) requests.push({ stem: entry.name.slice(0, -".request.json".length), request });
+  }
+  // Copies whose media can't be found anywhere go last: they are the likeliest to raise a dialog.
+  const reachable = (r) => Object.values(r.request.case.changes || {}).some((c) => c && c.exists === true);
+  requests.sort((a, b) => Number(!reachable(a)) - Number(!reachable(b)) || (a.stem < b.stem ? -1 : a.stem > b.stem ? 1 : 0));
+  log(`Premiere ${uxp.host.version}: ${requests.length} perturbed project(s) in out/perturbed/${major}/`);
+  if (requests.length) await openHostProject();
+  const options = perturbedOpenOptions();
+  let ok = 0;
+  const failed = [];
+  for (const { stem, request } of requests) {
+    let project = null;
+    try {
+      project = await ppro.Project.open(joinNative(folder, `${stem}.prproj`), options);
+      if (!project) throw new Error("open returned nothing");
+      const readback = await readProject(project, mediaRoot);
+      await closeQuietly(project);
+      project = null;
+      const truth = {
+        generator: { name: "filmcraft-corpus/premiere-projects", version: GENERATOR_VERSION, mode: "open perturbed" },
+        premiere: { version: uxp.host.version },
+        case: request.case,
+        ...readback,
+      };
+      await writeText(folder, `${stem}.json`, JSON.stringify(truth, null, 2) + "\n");
+      log(`ok   ${request.case.id}`);
+      ok++;
+    } catch (e) {
+      log(`FAIL ${request.case.id}: ${e && e.message ? e.message : e}`);
+      failed.push(request.case.id);
+    } finally {
+      await closeQuietly(project);
+    }
+  }
+  log(`done: ${ok}/${requests.length} ok`);
+  return { ok, total: requests.length, failed };
 }

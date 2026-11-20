@@ -1,0 +1,7 @@
+{
+  "id": "paths/relink",
+  "description": "The media is relinked through the API to an identical copy in out/relinked/relink/ after a sequence is made from it; shows which of FilePath, ActualMediaFilePath and RelativePath relinking rewrites.",
+  "media": ["v25_h264_aac.mp4"],
+  "sequences": [{ "name": "Main", "fromMedia": "v25_h264_aac.mp4" }],
+  "ops": [{ "op": "relink", "media": "v25_h264_aac.mp4", "into": "relink" }]
+}

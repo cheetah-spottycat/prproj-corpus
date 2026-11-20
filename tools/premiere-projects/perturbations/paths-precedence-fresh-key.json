@@ -1,0 +1,23 @@
+{
+  "id": "paths/fresh-key",
+  "description": "paths/isolated again, with a FileKey new to Premiere in every copy. In paths/precedence and paths/isolated Premiere linked a copy no field pointed to whenever FilePath was missing, even after a restart, so it remembers media locations outside the project. With a fresh FileKey it has to go by the project's own fields.",
+  "base": "basic/single-clip",
+  "media": "v25_h264_aac.mp4",
+  "freshFileKey": true,
+  "layout": {
+    "media": "fresh-key",
+    "copies": { "FilePath": "3-F", "ActualMediaFilePath": "2-A", "RelativePath": "1-R" },
+    "missing": "void"
+  },
+  "grid": {
+    "FilePath": ["here", "missing"],
+    "ActualMediaFilePath": ["here", "missing"],
+    "RelativePath": ["here", "missing"],
+    "project": ["in-place"]
+  },
+  "extra": [
+    { "FilePath": "missing", "ActualMediaFilePath": "absent", "RelativePath": "here", "project": "in-place" },
+    { "FilePath": "missing", "ActualMediaFilePath": "absent", "RelativePath": "missing", "project": "in-place" },
+    { "FilePath": "missing", "ActualMediaFilePath": "missing", "RelativePath": "here", "project": "moved" }
+  ]
+}
