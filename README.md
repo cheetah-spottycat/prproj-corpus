@@ -15,7 +15,8 @@ tools/premiere-projects/
   plugin/        UXP plugin that builds, saves, reopens and reads back each case
   cases/         case definitions, as data (see "Cases" below)
   check.py       privacy and truth checks on generated projects
-tools/format/    walk.py (inspect a generated project), inventory.py (names each importer reads)
+tools/format/    claims.py (checks docs/format/ against the corpus), walk.py (inspect a project),
+                 inventory.py (names each importer reads)
 docs/format/     what is known about the .prproj format, claim by claim
 media/           generated synthetic media (not committed until the size budget is settled)
 out/premiere/<major>/<area>__<case>.prproj + .json   local runs (gitignored)
@@ -88,12 +89,15 @@ Needs Premiere Pro 25.6 or later and Adobe's **UXP Developer Tool** (from the Cr
    Plugins ▸ FilmCraft corpus) and **dock it** into a panel group. A floating panel, or one opened
    on the start screen with no project open, disappears as soon as the run opens its first project.
    Window ▸ Workspaces ▸ Save Changes to This Workspace keeps it docked for next time.
-3. **Corpus folder…**: choose this repository's root. Optionally type a case-id regex, then **Run**.
+3. **Corpus folder…**: choose this repository's root (once: the panel remembers it, and asks
+   again only if the folder is no longer there). Optionally type a case-id regex, then **Run**.
    Each case gets a new project in `out/premiere/<major>/`, is saved, closed, reopened, read back and
    closed again. Premiere doesn't redraw the panel during a run (about a minute for all cases), so
    it shows the result, and the log with `ok` or `FAIL <reason>` per case, only at the end. The log
    is also written to `out/last-run.log`.
-4. `python tools/premiere-projects/check.py` before sharing anything.
+4. `python tools/premiere-projects/check.py` before sharing anything, and
+   `python tools/format/claims.py out/premiere/<major> --doc docs/format/prproj.md` to check the
+   format notes against what you generated.
 
 The plugin creates, saves and closes projects. Close your own projects first. It keeps an empty
 placeholder project (`tmp/run-host.prproj`, gitignored) open during the run, because Premiere hides
@@ -128,7 +132,9 @@ Times are `{"frames": n}` at the sequence rate or `{"ticks": "…"}`. Operations
 or `by` an offset; Premiere's action itself only shifts), `disable`, `rename`, `trackName`, `marker`, `bin`, `label`,
 `transition` (video only: `end` "start" or "end", `match` a regex that must pick exactly one of
 Premiere's video transition match names, optional `duration`, `singleSided`, `alignment`). An op works on
-`sequences[op.sequence || 0]`. `vary` makes one project per value. The case is copied into the
+`sequences[op.sequence || 0]`. A case may have no sequences. `vary` makes one project per value.
+`probe` logs the API's member names for tracks, track items and project items; cases under
+`probe/` are diagnostics, not corpus, and `claims.py` skips them. The case is copied into the
 truth JSON as `case`, so the request and Premiere's readback can be compared.
 
 Not reachable through UXP yet: setting clip speed and time remapping (speed can only be read).

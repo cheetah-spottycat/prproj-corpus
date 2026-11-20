@@ -1,0 +1,7 @@
+{
+  "id": "probe/api",
+  "description": "Diagnostic, not corpus: logs the methods Premiere's UXP API offers on tracks, track items and project items, to find out which track switches (mute, lock, hide) a case can set.",
+  "media": ["v25_h264_aac.mp4"],
+  "sequences": [{ "name": "Main", "fromMedia": "v25_h264_aac.mp4" }],
+  "ops": [{ "op": "probe", "media": "v25_h264_aac.mp4" }]
+}

@@ -75,8 +75,10 @@ def check_one(path: Path, personal: list[tuple[str, bytes]]) -> list[str]:
     else:
         try:
             data = json.loads(truth.read_text(encoding="utf-8-sig"))
-            if not data.get("sequences"):
-                problems.append("truth has no sequences")
+            # A case may ask for no sequence (labels/index); then the readback has none either.
+            wanted = len(data.get("case", {}).get("sequences", []))
+            if len(data.get("sequences", [])) != wanted:
+                problems.append(f"truth has {len(data.get('sequences', []))} sequences, the case asked for {wanted}")
         except json.JSONDecodeError as e:
             problems.append(f"truth does not parse: {e}")
         raw_truth = truth.read_bytes().lower()

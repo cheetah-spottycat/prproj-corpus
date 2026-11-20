@@ -1,0 +1,7 @@
+{
+  "id": "labels/defaults",
+  "description": "One item of each media kind imported with no label set, plus a sequence, to record the label each gets by default (with Premiere's default label preferences).",
+  "media": ["v25_h264_aac.mp4", "v2398_prores_pcm.mov", "v5994_h264.mp4", "a48k_440_stereo.wav", "a48k_880_mono.wav", "still_1920x1080.png"],
+  "sequences": [{ "name": "Main", "fromMedia": "v25_h264_aac.mp4" }],
+  "ops": []
+}

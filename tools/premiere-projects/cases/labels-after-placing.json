@@ -1,0 +1,7 @@
+{
+  "id": "labels/after-placing",
+  "description": "A sequence is made from the media, then the media gets label 7, to show whether clips already in the sequence take the new label.",
+  "media": ["v25_h264_aac.mp4"],
+  "sequences": [{ "name": "Main", "fromMedia": "v25_h264_aac.mp4" }],
+  "ops": [{ "op": "label", "media": "v25_h264_aac.mp4", "color": 7 }]
+}

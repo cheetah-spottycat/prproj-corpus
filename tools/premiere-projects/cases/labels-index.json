@@ -1,0 +1,7 @@
+{
+  "id": "labels/index",
+  "description": "One media item given each of the 16 label indices, with no sequence, to show how the API's label index is stored.",
+  "media": ["v25_h264_aac.mp4"],
+  "ops": [{ "op": "label", "media": "v25_h264_aac.mp4", "color": 0 }],
+  "vary": { "param": "ops.0.color", "values": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] }
+}

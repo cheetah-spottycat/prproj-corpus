@@ -26,6 +26,25 @@ Corpus evidence names the case (`tools/premiere-projects/cases/`). Unless stated
 Premiere Pro 27.0 on Windows, with a German user interface (which matters: see
 [Localised names](#localised-names)).
 
+### How claims are checked
+
+Every confirmed or settled row cites one or more checks as `[claim: id]`. Each check is a short
+function in [`tools/format/claims.py`](../../tools/format/claims.py) that reads the generated
+projects, and where it can compares them with Premiere's own readback in the truth JSON. Run it
+on a corpus you generated yourself:
+
+```sh
+python tools/format/claims.py out/premiere/27 --doc docs/format/prproj.md
+python tools/format/claims.py out/premiere/27 --self-test
+```
+
+The first runs every check and also checks this page: a confirmed or settled row without a
+citation, a citation without a check, or a check this page doesn't cite fails the run. The
+second makes sure the checks can fail at all. It changes one fact in a copy of a project (a
+clip's end by one tick, a removed `IsMuted`, a renamed `MZ.TrackName`…) and expects the claim
+about that fact to fail. So *confirmed* here means "a check that can fail passed on Premiere's
+output", and anyone with Premiere can repeat it.
+
 ## Importers cited
 
 | PR | Commit | Lineage |
@@ -46,9 +65,9 @@ So there are three independent readings: #1694 (with #2296), #3428 and #2312/#45
 
 | Claim | Status | Evidence |
 |---|---|---|
-| The file is gzip (RFC 1952) around UTF-8 XML. Importers also accept plain XML. | confirmed / code | every corpus file; all importers |
-| The root element is `<PremiereData Version="3">`. #3428 refuses any other version. | confirmed | every corpus file |
-| Elements carry a `Version` attribute (the class's serialisation version) and objects a `ClassID` GUID per class. No importer reads either. | confirmed | every corpus file |
+| The file is gzip (RFC 1952) around UTF-8 XML. Importers also accept plain XML. | confirmed / code | every corpus file; all importers [claim: container.gzip-xml] |
+| The root element is `<PremiereData Version="3">`. #3428 refuses any other version. | confirmed | every corpus file [claim: container.root] |
+| Elements carry a `Version` attribute (the class's serialisation version) and objects a `ClassID` GUID per class. No importer reads either. | confirmed | every corpus file [claim: container.class-ids] |
 
 ## 2. Object model
 
@@ -57,22 +76,22 @@ reference instead of nesting.
 
 | Claim | Status | Evidence |
 |---|---|---|
-| A top-level object is defined by `ObjectID` (a decimal integer) or `ObjectUID` (a GUID), never both. | confirmed | all 22 corpus projects |
-| A reference is an empty element with `ObjectRef="<ObjectID>"` or `ObjectURef="<ObjectUID>"`. | confirmed; all importers | all corpus projects: 4,485 `ObjectRef`, 553 `ObjectURef`, none unresolved at top level |
+| A top-level object is defined by `ObjectID` (a decimal integer) or `ObjectUID` (a GUID), never both. | confirmed | all 22 corpus projects [claim: objects.id-or-uid] |
+| A reference is an empty element with `ObjectRef="<ObjectID>"` or `ObjectURef="<ObjectUID>"`. | confirmed; all importers | all corpus projects: 4,485 `ObjectRef`, 553 `ObjectURef`, none unresolved at top level [claim: objects.refs-resolve] |
 | Which classes use `ObjectUID`: `Sequence`, `Media`, `MasterClip`, `RootProjectItem`, `BinProjectItem`, `ClipProjectItem`, `VideoClipTrack`, `AudioClipTrack`. The rest use `ObjectID`. | observed | `basic/two-clips-gap` |
-| Only top-level definitions are addressable. A property value can hold a second, nested object table with its own `ObjectID`s that repeat top-level ones: `ProjectViewState.List` (Project panel column layout) has about 60 nested definitions, and an `ObjectRef="2"` inside it points into that nested table. Indexing every element in the document by `ObjectID` would therefore collide. | confirmed | every corpus project. All three importers index only the root's children. |
-| The root starts with `<Project ObjectRef="1"/>` before `<Project ObjectID="1">`. | confirmed | every corpus project |
-| List entries carry an `Index` attribute. In the corpus every list is numbered 0…n−1 in document order. #3428 sorts by `Index` and rejects duplicates or missing ones; #4504 rejects duplicate track indices. | confirmed (888 lists) | all corpus projects |
+| Only top-level definitions are addressable. A property value can hold a second, nested object table with its own `ObjectID`s that repeat top-level ones: `ProjectViewState.List` (Project panel column layout) has about 60 nested definitions, and an `ObjectRef="2"` inside it points into that nested table. Indexing every element in the document by `ObjectID` would therefore collide. | confirmed | every corpus project. All three importers index only the root's children. [claim: objects.nested-table] |
+| The root starts with `<Project ObjectRef="1"/>` before `<Project ObjectID="1">`. | confirmed | every corpus project [claim: objects.project-ref-first] |
+| List entries carry an `Index` attribute. In the corpus every list is numbered 0…n−1 in document order. #3428 sorts by `Index` and rejects duplicates or missing ones; #4504 rejects duplicate track indices. | confirmed (888 lists) | all corpus projects [claim: objects.list-index] |
 
 ## 3. Time
 
 | Claim | Status | Evidence |
 |---|---|---|
-| All times and durations are integer **ticks**, 254,016,000,000 per second (FilmCraft's `Tick` uses the same rate). | confirmed; all importers | every case; `trim/in-out` start 101,606,400,000 = frame 10 at 25 fps |
-| A video `FrameRate` element holds **ticks per frame**: 10,160,640,000 (25), 10,594,584,000 (23.976), 8,475,667,200 (29.97), 4,237,833,600 (59.94). | confirmed; all importers | `rates/sequence-from-media` |
-| An audio `FrameRate` holds **ticks per sample**: 5,292,000 at 48 kHz. `Media/ConformedAudioRate` uses the same unit. | confirmed; all importers derive the sample rate this way | every case with audio |
-| A time equal to zero is usually **omitted**: a clip at the start of a sequence has `<TrackItem><End>…</End></TrackItem>` with no `Start`. 49 of 61 timing records in the corpus omit `Start`. A reader must default a missing `Start` to 0. | confirmed | `basic/single-clip`, `transitions/single-sided` |
-| #1694 defaults a missing transition `Start` to −1 and then skips the transition as having "no valid position", so a transition that starts at 0 is dropped. Its clips default to 0. | conflict, settled by the corpus: default to 0 | `transitions/single-sided` (transition with no `Start`); #1694 `transition()` |
+| All times and durations are integer **ticks**, 254,016,000,000 per second (FilmCraft's `Tick` uses the same rate). | confirmed; all importers | every case; `trim/in-out` start 101,606,400,000 = frame 10 at 25 fps [claim: clips.timeline-matches-readback] |
+| A video `FrameRate` element holds **ticks per frame**: 10,160,640,000 (25), 10,594,584,000 (23.976), 8,475,667,200 (29.97), 4,237,833,600 (59.94). | confirmed; all importers | `rates/sequence-from-media` [claim: time.video-frame-rate] |
+| An audio `FrameRate` holds **ticks per sample**: 5,292,000 at 48 kHz. `Media/ConformedAudioRate` uses the same unit. | confirmed; all importers derive the sample rate this way | every case with audio [claim: time.audio-frame-rate] |
+| A time equal to zero is usually **omitted**: a clip at the start of a sequence has `<TrackItem><End>…</End></TrackItem>` with no `Start`. 49 of 61 timing records in the corpus omit `Start`. A reader must default a missing `Start` to 0. | confirmed | `basic/single-clip`, `transitions/single-sided` [claim: time.start-omitted] [claim: clips.timeline-matches-readback] |
+| #1694 defaults a missing transition `Start` to −1 and then skips the transition as having "no valid position", so a transition that starts at 0 is dropped. Its clips default to 0. | conflict, settled by the corpus: default to 0 | `transitions/single-sided` (transition with no `Start`); #1694 `transition()` [claim: transitions.single-sided] |
 
 ## 4. Project items and bins
 
@@ -86,9 +105,9 @@ RootProjectItem ─ ProjectItem/Name ("Root Bin")
 
 | Claim | Status | Evidence |
 |---|---|---|
-| Bins nest through `ProjectItemContainer/Items/Item`. A `BinProjectItem` holds bins and clips; a `ClipProjectItem` names a `MasterClip` (media or a sequence). | confirmed | `project/bins-labels` (Footage › Stills nested, Audio beside it) |
+| Bins nest through `ProjectItemContainer/Items/Item`. A `BinProjectItem` holds bins and clips; a `ClipProjectItem` names a `MasterClip` (media or a sequence). | confirmed | `project/bins-labels` (Footage › Stills nested, Audio beside it) [claim: bins.tree] |
 | Read by #1694 and #4504; #3428 does not import bins. | code | importer-names.md |
-| A sequence also has a `ClipProjectItem` whose `MasterClip` leads to it via `VideoSequenceSource`/`AudioSequenceSource` › `SequenceSource/Sequence`. #1694 finds sequences only this way, through the bin tree; #3428 and #4504 take every top-level `Sequence`. Both give the same result for the corpus. | confirmed; conflict in approach | every corpus project |
+| A sequence also has a `ClipProjectItem` whose `MasterClip` leads to it via `VideoSequenceSource`/`AudioSequenceSource` › `SequenceSource/Sequence`. #1694 finds sequences only this way, through the bin tree; #3428 and #4504 take every top-level `Sequence`. Both give the same result for the corpus. | confirmed; conflict in approach | every corpus project [claim: bins.sequence-item] |
 
 ## 5. Media
 
@@ -104,12 +123,12 @@ Media ─ FilePath, ActualMediaFilePath, RelativePath, Title
 
 | Claim | Status | Evidence |
 |---|---|---|
-| `Media` holds `FilePath` and `ActualMediaFilePath` (absolute) and `RelativePath`, relative to the folder holding the project file (`..\..\..\media\v25_h264_aac.mp4` for a project in `out/premiere/27/`), with Windows separators on Windows. | confirmed | every corpus project |
+| `Media` holds `FilePath` and `ActualMediaFilePath` (absolute) and `RelativePath`, relative to the folder holding the project file (`..\..\..\media\v25_h264_aac.mp4` for a project in `out/premiere/27/`), with Windows separators on Windows. | confirmed | every corpus project [claim: media.relative-path] |
 | Which path wins: #1694 `FilePath` › `ActualMediaFilePath`, keeping `RelativePath` as an alternative; #3428 `ActualMediaFilePath` › `FilePath` › `RelativePath`; #4504 `ActualMediaFilePath` › `FilePath`, falling back to `RelativePath` when the absolute path is foreign or missing. | **conflict, open** | In every corpus file the two absolute paths are equal. Needs a case where they differ (moved or relinked media). |
-| `VideoStream/FrameRect` is `left,top,right,bottom` (`0,0,1920,1080`). `Duration` is in ticks. | confirmed; all importers | `rates/frame-sizes` (1280×720, 3840×2160, 1080×1920) |
-| A still has `IsStill=true` and a placeholder `Duration` of 10,973,491,200,000,000 ticks (12 hours). #1694 drops the duration for stills; #3428 keeps it. | confirmed | `basic/multitrack` (`still_1920x1080.png`) |
-| `AudioStream/AudioChannelLayout` is JSON, one entry per channel (`[{"channellabel":100},{"channellabel":101}]` for stereo). Importers count the entries. | confirmed (stereo) | every case with stereo audio |
-| `AudioStream` also stores `ConformedAudioPath` and `PeakFilePath`: absolute paths into the media cache, which by default is under the user profile. Anyone sharing projects must move the cache first (see the corpus README). | confirmed | every case with audio |
+| `VideoStream/FrameRect` is `left,top,right,bottom` (`0,0,1920,1080`). `Duration` is in ticks. | confirmed; all importers | `rates/frame-sizes` (1280×720, 3840×2160, 1080×1920) [claim: media.frame-rect] |
+| A still has `IsStill=true` and a placeholder `Duration` of 10,973,491,200,000,000 ticks (12 hours). #1694 drops the duration for stills; #3428 keeps it. | confirmed | `basic/multitrack` (`still_1920x1080.png`) [claim: media.still] |
+| `AudioStream/AudioChannelLayout` is JSON, one entry per channel (`[{"channellabel":100},{"channellabel":101}]` for stereo). Importers count the entries. | confirmed (stereo) | every case with stereo audio [claim: media.channel-layout] |
+| `AudioStream` also stores `ConformedAudioPath` and `PeakFilePath`: absolute paths into the media cache, which by default is under the user profile. Anyone sharing projects must move the cache first (see the corpus README). | confirmed | every case with audio [claim: media.cache-paths] |
 
 ## 6. Sequences
 
@@ -124,10 +143,10 @@ Sequence ─ Name
 
 | Claim | Status | Evidence |
 |---|---|---|
-| Three track groups, in `Index` order: video, audio, data. `First` is a media-type GUID; importers use the group's tag name instead. | confirmed | every corpus project |
-| The sequence frame size is the `VideoTrackGroup`'s `FrameRect`. `MZ.Sequence.PreviewFrameSizeWidth/Height` is the preview size, which #4504 notes can differ and uses only as a fallback. | confirmed (sizes equal in the corpus) | `rates/frame-sizes` |
-| The frame rate is `VideoTrackGroup/TrackGroup/FrameRate` (ticks per frame); the sample rate is `AudioTrackGroup/TrackGroup/FrameRate` (ticks per sample). | confirmed; all importers | `rates/sequence-from-media` |
-| The work area is `MZ.WorkInPoint`/`MZ.WorkOutPoint` in the sequence's `Node/Properties`. #3428 reads both; #4504 reads the out point. | confirmed present | every corpus project (a new sequence's out point is 60 s) |
+| Three track groups, in `Index` order: video, audio, data. `First` is a media-type GUID; importers use the group's tag name instead. | confirmed | every corpus project [claim: sequence.track-groups] |
+| The sequence frame size is the `VideoTrackGroup`'s `FrameRect`. `MZ.Sequence.PreviewFrameSizeWidth/Height` is the preview size, which #4504 notes can differ and uses only as a fallback. | confirmed (sizes equal in the corpus) | `rates/frame-sizes` [claim: sequence.frame-size] |
+| The frame rate is `VideoTrackGroup/TrackGroup/FrameRate` (ticks per frame); the sample rate is `AudioTrackGroup/TrackGroup/FrameRate` (ticks per sample). | confirmed; all importers | `rates/sequence-from-media` [claim: time.video-frame-rate] [claim: time.audio-frame-rate] |
+| The work area is `MZ.WorkInPoint`/`MZ.WorkOutPoint` in the sequence's `Node/Properties`. #3428 reads both; #4504 reads the out point. | confirmed present | every corpus project (a new sequence's out point is 60 s) [claim: sequence.work-area] |
 
 ## 7. Tracks
 
@@ -144,8 +163,8 @@ VideoClipTrack ─ ClipTrack/Track (Index, ID, MediaType, IsMuted?, IsLocked?, N
 
 | Claim | Status | Evidence |
 |---|---|---|
-| A new sequence has three video and three audio tracks; empty tracks are listed with empty `ClipItems`. `Track/Index` matches the list entry's `Index`. | confirmed | `basic/two-clips-gap` |
-| **Track name** is `ClipTrack/Track/Node/Properties/MZ.TrackName`, written only when set. #4504 reads it there; #3428 reads `ClipTrack/Track/Name`, which Premiere 27.0 does not write; #1694 does not read track names. | **conflict, settled: `MZ.TrackName`** | `tracks/names` (Picture, Dialogue) |
+| A new sequence has three video and three audio tracks; empty tracks are listed with empty `ClipItems`. `Track/Index` matches the list entry's `Index`. | confirmed | `basic/two-clips-gap` [claim: tracks.new-sequence] |
+| **Track name** is `ClipTrack/Track/Node/Properties/MZ.TrackName`, written only when set. #4504 reads it there; #3428 reads `ClipTrack/Track/Name`, which Premiere 27.0 does not write; #1694 does not read track names. | **conflict, settled: `MZ.TrackName`** | `tracks/names` (Picture, Dialogue) [claim: tracks.name] |
 | **Track mute and disable**: #1694 treats `IsMuted` on a video track as the track's visibility switch and on an audio track as mute; #3428 reads `IsDisabled` for visibility and `IsMuted` for mute; #4504 reads `IsMuted` as mute. #1694 and #4504 also read the audio track fader's mute. | **conflict, open** | No corpus case yet. |
 | `IsLocked` on `ClipTrack/Track` locks the track. | code (all importers) | no corpus case yet |
 
@@ -163,12 +182,12 @@ VideoClipTrackItem ─ ClipTrackItem ─ TrackItem (Start?, End)
 
 | Claim | Status | Evidence |
 |---|---|---|
-| `TrackItem/Start` and `End` are sequence times in ticks; `End` is exclusive. | confirmed; all importers | `trim/in-out`: 101,606,400,000–812,851,200,000 (frames 10–80) |
-| Each timeline clip has its **own** `VideoClip`/`AudioClip` (through `SubClip/Clip`) holding the source range `Clip/InPoint` and `Clip/OutPoint`. The `MasterClip`'s own clips carry no in or out point. | confirmed | `basic/single-clip`, `trim/in-out` |
-| The clip name is `SubClip/Name`. | confirmed; all importers | `clip/disabled-renamed` ("Renamed clip") |
-| Trimming the in point in Premiere moves the clip's start by the same amount (a trim, not a slip). | confirmed | `trim/in-out` |
-| **Clip disabled** is `ClipTrackItem/IsMuted=true`. #4504 reads it there; #3428 reads `IsDisabled` on `ClipTrackItem` or `TrackItem`, which Premiere 27.0 does not write; #1694 does not read it. | **conflict, settled: `ClipTrackItem/IsMuted`** | `clip/disabled-renamed` |
-| **Speed** is `Clip/PlaybackSpeed` (1 = 100%), omitted at 100%; `PlayBackwards` reverses (read by #1694). | confirmed absent at 100%; value: code | no corpus clip stores `PlaybackSpeed`. The UXP API cannot set speed. |
+| `TrackItem/Start` and `End` are sequence times in ticks; `End` is exclusive. | confirmed; all importers | `trim/in-out`: 101,606,400,000–812,851,200,000 (frames 10–80) [claim: clips.timeline-matches-readback] |
+| Each timeline clip has its **own** `VideoClip`/`AudioClip` (through `SubClip/Clip`) holding the source range `Clip/InPoint` and `Clip/OutPoint`. The `MasterClip`'s own clips carry no in or out point, except a still's, which has in point 0 and out point 5 s (Premiere's default still duration). | confirmed (the still exception was found by the check) | `basic/single-clip`, `trim/in-out` [claim: clips.timeline-matches-readback] [claim: clips.master-no-range] |
+| The clip name is `SubClip/Name`. | confirmed; all importers | `clip/disabled-renamed` ("Renamed clip") [claim: clips.timeline-matches-readback] |
+| Trimming the in point in Premiere moves the clip's start by the same amount (a trim, not a slip). | confirmed | `trim/in-out` [claim: clips.trim-moves-start] |
+| **Clip disabled** is `ClipTrackItem/IsMuted=true`. #4504 reads it there; #3428 reads `IsDisabled` on `ClipTrackItem` or `TrackItem`, which Premiere 27.0 does not write; #1694 does not read it. | **conflict, settled: `ClipTrackItem/IsMuted`** | `clip/disabled-renamed` [claim: clips.disabled] |
+| **Speed** is `Clip/PlaybackSpeed` (1 = 100%), omitted at 100%; `PlayBackwards` reverses (read by #1694). | confirmed absent at 100%; value: code | no corpus clip stores `PlaybackSpeed`. The UXP API cannot set speed. [claim: clips.speed-omitted] |
 | **Time remapping** is `Clip/TimeRemapping` › `Keyframes` (read by #2296 only). | code | not reachable through UXP |
 | #4504 accepts a negative `InPoint` (a clip slipped before the source start) and clamps it to 0. | code | no corpus case |
 
@@ -176,7 +195,7 @@ VideoClipTrackItem ─ ClipTrackItem ─ TrackItem (Start?, End)
 
 | Claim | Status | Evidence |
 |---|---|---|
-| Linked video and audio form a top-level `Link` object: `TrackItemGroup/TrackItems/TrackItem → …ClipTrackItem`. The sequence lists its links under `PersistentGroupContainer/LinkContainer/Links`. | confirmed | `basic/two-clips-gap` (two links, one per video/audio pair) |
+| Linked video and audio form a top-level `Link` object: `TrackItemGroup/TrackItems/TrackItem → …ClipTrackItem`. The sequence lists its links under `PersistentGroupContainer/LinkContainer/Links`. | confirmed | `basic/two-clips-gap` (two links, one per video/audio pair) [claim: links.objects] [claim: links.pairs] |
 | #1694 finds links through the sequence's list; #3428 and #4504 take every top-level `Link`. #3428 rejects a clip in two links. | code | |
 
 ## 10. Transitions
@@ -193,13 +212,13 @@ VideoTransitionTrackItem ─ TransitionTrackItem ─ TrackItem (Start?, End)
 
 | Claim | Status | Evidence |
 |---|---|---|
-| A transition is listed in its track's `TransitionItems`, and the clips refer to it: the outgoing clip's `TailTransition` and the incoming clip's `HeadTransition` point to the same object. | confirmed | `transitions/cross-dissolve` |
-| `TrackItem/Start` and `End` are sequence times. A 10-frame dissolve centred on a cut at frame 80 covers 75–85; a 20-frame one 70–90. | confirmed | `transitions/cross-dissolve--10`, `--20` |
-| `Alignment` is the cut's offset from the transition's start, in ticks (5 frames and 10 frames in those cases; 0 for one at a clip's start). | confirmed | as above, `transitions/single-sided` |
-| A single-sided transition has `HasOutgoingClip=false` (at a clip's start) and only a `HeadTransition` reference. | confirmed | `transitions/single-sided` |
+| A transition is listed in its track's `TransitionItems`, and the clips refer to it: the outgoing clip's `TailTransition` and the incoming clip's `HeadTransition` point to the same object. | confirmed | `transitions/cross-dissolve` [claim: transitions.listed-and-referenced] |
+| `TrackItem/Start` and `End` are sequence times. A 10-frame dissolve centred on a cut at frame 80 covers 75–85; a 20-frame one 70–90. | confirmed | `transitions/cross-dissolve--10`, `--20` [claim: transitions.centred] |
+| `Alignment` is the cut's offset from the transition's start, in ticks (5 frames and 10 frames in those cases; 0 for one at a clip's start). | confirmed | as above, `transitions/single-sided` [claim: transitions.centred] [claim: transitions.single-sided] |
+| A single-sided transition has `HasOutgoingClip=false` (at a clip's start) and only a `HeadTransition` reference. | confirmed | `transitions/single-sided` [claim: transitions.single-sided] |
 | #3428 reads `Alignment` and the two `Has…Clip` flags. #1694 ignores `Alignment` and infers the alignment from where the cut falls. #4504 reads the transitions through each clip's `Head/TailTransition`, not `Alignment`. | code | |
-| **Identifying the transition**: #1694 and #4504 go by `DisplayName`, which is localised (see below). #3428 goes by `MatchName` and treats `AE.ADBE Cross Dissolve` as standard. In Premiere 27.0 the only video transition match name matching `/cross ?dissolve/i` is `AE.ADBE Cross Dissolve New` (displayed as the legacy Cross Dissolve). #3428 would report it as non-standard and substitute Cross Dissolve: the same result, with a spurious warning. | **conflict, settled: match by `MatchName`** (the list of standard names needs checking) | `transitions/*`; the plugin resolves `match: "cross ?dissolve"` against the full list from the API |
-| Premiere 27.0's UXP API returns transition track items as `null`, so the truth JSON can only count them; positions above come from the saved XML. | confirmed | `transitions/*` |
+| **Identifying the transition**: #1694 and #4504 go by `DisplayName`, which is localised (see below). #3428 goes by `MatchName` and treats `AE.ADBE Cross Dissolve` as standard. In Premiere 27.0 the only video transition match name matching `/cross ?dissolve/i` is `AE.ADBE Cross Dissolve New` (displayed as the legacy Cross Dissolve). #3428 would report it as non-standard and substitute Cross Dissolve: the same result, with a spurious warning. | **conflict, settled: match by `MatchName`** (the list of standard names needs checking) | `transitions/*`; the plugin resolves `match: "cross ?dissolve"` against the full list from the API [claim: transitions.match-name] |
+| Premiere 27.0's UXP API returns transition track items as `null`, so the truth JSON can only count them; positions above come from the saved XML. | confirmed | `transitions/*` [claim: transitions.api-null] |
 
 ## 11. Markers
 
@@ -210,9 +229,9 @@ Sequence ─ MarkerOwner/Markers ─▶ Markers ─ Markers/Marker[Index] ─ Fi
 
 | Claim | Status | Evidence |
 |---|---|---|
-| Each marker is a `Marker` object whose `DVAMarker` element holds JSON: `{"DVAMarker": {"mMarkerID", "mName", "mType", "mStartTime": {"ticks"}, "mDuration"?: {"ticks"}, "mComment"?, "mCuePointList"?}}`. Optional keys are omitted when empty. | confirmed | `markers/sequence` |
-| `mType` is `"Comment"` or `"Chapter"` (more types from the API: weblink, cue point; not yet in a case). | confirmed (two types) | `markers/sequence` |
-| The colour is a cue-point entry whose `mValue` is JSON `{"color": n}` with `n` = `0xAABBGGRR`. Indices 0–7 give `0xff378671`, `0xff362cd2`, `0xffb18baf`, `0xff246fe9`, `0xff2ba1d0`, `0xffffffff`, `0xfffc8d42`, `0xffd6f419`: green, red, purple, orange, yellow, white, blue, cyan (names by appearance). A marker without a colour has no cue-point entry. | confirmed | `markers/colour--0` … `--7` |
+| Each marker is a `Marker` object whose `DVAMarker` element holds JSON: `{"DVAMarker": {"mMarkerID", "mName", "mType", "mStartTime": {"ticks"}, "mDuration"?: {"ticks"}, "mComment"?, "mCuePointList"?}}`. Optional keys are omitted when empty. | confirmed | `markers/sequence` [claim: markers.dva-json] |
+| `mType` is `"Comment"` or `"Chapter"` (more types from the API: weblink, cue point; not yet in a case). | confirmed (two types) | `markers/sequence` [claim: markers.type] |
+| The colour is a cue-point entry whose `mValue` is JSON `{"color": n}` with `n` = `0xAABBGGRR`. Indices 0–7 give `0xff378671`, `0xff362cd2`, `0xffb18baf`, `0xff246fe9`, `0xff2ba1d0`, `0xffffffff`, `0xfffc8d42`, `0xffd6f419`: green, red, purple, orange, yellow, white, blue, cyan (names by appearance). A marker without a colour has no cue-point entry. | confirmed | `markers/colour--0` … `--7` [claim: markers.colour] |
 | The list is in marker-GUID order, not time or creation order. | observed (one case) | `markers/sequence` |
 | Only #4504 reads markers; it decodes the colour as `0xAABBGGRR` too. | code | |
 
@@ -220,8 +239,11 @@ Sequence ─ MarkerOwner/Markers ─▶ Markers ─ Markers/Marker[Index] ─ Fi
 
 | Claim | Status | Evidence |
 |---|---|---|
-| A label is stored in the clip objects' `Node/Properties` as `asl.clip.label.name` (`BE.Prefs.LabelColors.<n>`) and `asl.clip.label.color` (an integer colour). | observed | `project/bins-labels`, `basic/single-clip` |
-| How `n` relates to the API's label index, and which label new media gets by default, is not worked out yet. No importer reads labels. | open | |
+| A project item's label is stored as `BE.Prefs.LabelColors.<n>`, where `n` is the API's label index, in two places: `ProjectItem/Node/Properties/Column.PropertyText.Label`, and `Clip/Node/Properties/asl.clip.label.name` on each of its `MasterClip`'s clips. | confirmed, indices 0–15 | `labels/index--0` … `--15`, every corpus project [claim: labels.stored-index] |
+| Next to the name, the master clips' `asl.clip.label.color` holds the colour of the label the item got **on import** (11405886, 6769408, 480554, 8851829 and 19005 for default labels 0, 1, 2, 3 and 5), and it is not updated when the label changes: all 16 `labels/index` projects store 6769408. Read the label from the name, never from this integer. | confirmed (API relabelling; relabelling by hand in the Project panel not tested) | `labels/index--*`, `labels/defaults` [claim: labels.colour-from-import] |
+| Clips placed in a sequence get their own copy of the label, on their own `VideoClip`/`AudioClip`. Relabelling the project item afterwards leaves those copies unchanged. | confirmed | `project/bins-labels` (label 2 set after placing; the timeline clips keep 1), `labels/after-placing` [claim: labels.placed-clips-keep-label] |
+| With Premiere's default label preferences, an unlabelled item gets a label by kind: video only 0, video with audio 1, audio 2, still 3, sequence 5. Label names and colours are user preferences, so a reader should map `n` to a colour itself, not trust the stored integer. | confirmed (default preferences) | `labels/defaults` (MP4 and ProRes MOV with audio, video-only MP4, stereo and mono WAV, PNG, sequence) [claim: labels.defaults] |
+| No importer reads labels. | code | importer-names.md |
 
 ## Localised names
 
@@ -237,9 +259,9 @@ transition mapping and #1694's fader and transition mapping go by name.
 
 Each settles an open entry above:
 
-- moved or relinked media, so `FilePath` and `ActualMediaFilePath` differ (path precedence);
-- a muted, a locked and a hidden track, video and audio (track switches);
+- moved or relinked media, so `FilePath` and `ActualMediaFilePath` differ (path precedence). The API offers `ClipProjectItem.changeMediaFilePath` and `createSetOfflineAction`, so this can be generated;
+- a muted track, video and audio, through the API's `Track.setMute` (track switches). The API has no lock action, so a locked track needs a manual step;
 - a weblink and a cue-point marker, a marker on a clip (marker types and owners);
-- label index ↔ stored name and colour;
+- whether relabelling by hand in the Project panel updates `asl.clip.label.color` (the API does not);
 - a second interface language, to list which strings are localised;
 - clip speed and reverse, through the FilmCraft round-trip route (the API cannot set them).

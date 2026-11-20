@@ -78,13 +78,49 @@ function keepWorkspaceDuringRun() {
   };
 }
 
+// The chosen corpus folder is remembered across sessions as a UXP persistent token (an opaque
+// grant for that folder, kept in the plugin's own localStorage), so it needn't be picked each time.
+// If the token no longer works (folder moved, plugin reinstalled), the panel asks again.
+const ROOT_TOKEN_KEY = "corpusRootToken";
+
+function showRoot(folder, note) {
+  document.getElementById("root").textContent = folder ? `${folder.nativePath}${note ? ` (${note})` : ""}` : "(not chosen)";
+}
+
+async function restoreCorpusRoot() {
+  let token = null;
+  try {
+    token = localStorage.getItem(ROOT_TOKEN_KEY);
+    if (!token) return;
+    const folder = await fs.getEntryForPersistentToken(token);
+    if (!folder || !folder.isFolder) throw new Error("not a folder");
+    corpusRoot = folder;
+    showRoot(folder, "remembered");
+  } catch (e) {
+    if (token) {
+      log(`note: the remembered corpus folder is no longer available (${e && e.message ? e.message : e}); choose it again`);
+      try {
+        localStorage.removeItem(ROOT_TOKEN_KEY);
+      } catch (_) {
+        // Nothing more to do; the panel asks for the folder either way.
+      }
+    }
+  }
+}
+
 document.getElementById("choose").addEventListener("click", async () => {
   const folder = await fs.getFolder();
-  if (folder) {
-    corpusRoot = folder;
-    document.getElementById("root").textContent = folder.nativePath;
+  if (!folder) return;
+  corpusRoot = folder;
+  showRoot(folder);
+  try {
+    localStorage.setItem(ROOT_TOKEN_KEY, await fs.createPersistentToken(folder));
+  } catch (e) {
+    log(`note: could not remember the corpus folder (${e && e.message ? e.message : e}); it will be asked for next time`);
   }
 });
+
+restoreCorpusRoot();
 
 document.getElementById("run").addEventListener("click", async () => {
   if (!corpusRoot) {
@@ -357,6 +393,28 @@ const OPS = {
     const item = await mediaItem(ctx.project, op.media);
     transact(ctx.project, "label", () => [item.createSetColorLabelAction(op.color)]);
   },
+  // Diagnostic: logs the member names the public API offers on tracks, a clip track item, a
+  // project item and the sequence, and the module's exports, so cases are written for what the
+  // API can actually do. Changes nothing.
+  async probe(ctx, op) {
+    const targets = {
+      sequence: async () => ctx.sequence,
+      videoTrack: () => trackOf(ctx.sequence, "video", 0),
+      audioTrack: () => trackOf(ctx.sequence, "audio", 0),
+      clipTrackItem: () => clipOf(ctx.sequence, { kind: "video", track: 0, index: 0 }),
+      projectItem: () => mediaItem(ctx.project, op.media),
+      clipProjectItem: async () => ppro.ClipProjectItem.cast(await mediaItem(ctx.project, op.media)),
+    };
+    for (const [label, get] of Object.entries(targets)) {
+      try {
+        log(`probe ${label}: ${memberNames(await get()).join(", ")}`);
+      } catch (e) {
+        log(`probe ${label}: unavailable (${e && e.message ? e.message : e})`);
+      }
+    }
+    log(`probe premierepro: ${Object.keys(ppro).sort().join(", ")}`);
+    log(`probe Constants: ${Object.keys(ppro.Constants || {}).sort().join(", ")}`);
+  },
   // Video transition on one end of a clip. `match` is a case-insensitive regex that must pick out
   // exactly one of Premiere's installed video transition match names; on a miss the error lists
   // them, so a case can be fixed without guessing.
@@ -375,6 +433,16 @@ const OPS = {
     });
   },
 };
+
+// Every property name on an object and its prototypes, without Object's own.
+function memberNames(obj) {
+  if (!obj) return ["(null)"];
+  const names = new Set();
+  for (let o = obj; o && o !== Object.prototype; o = Object.getPrototypeOf(o)) {
+    for (const name of Object.getOwnPropertyNames(o)) if (name !== "constructor") names.add(name);
+  }
+  return [...names].sort();
+}
 
 async function transitionMatchName(pattern) {
   if (typeof pattern !== "string" || !pattern) throw new Error('transition needs "match"');
